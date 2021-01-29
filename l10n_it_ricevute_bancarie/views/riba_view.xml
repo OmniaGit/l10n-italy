@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <menuitem name="C/O" parent="account_accountant.menu_accounting" id="menu_riba" />
+    <menuitem name="C/O" parent="account.menu_finance" id="menu_riba" />
 
     <!-- ====================================================== -->
     <!--                     DISTINTA RIBA - FILTRI             -->
