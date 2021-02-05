@@ -198,6 +198,16 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 />
             </DatiRiepilogo>
         </template>
+        <template id="account_invoice_line_it_dati_riepilogo_0">
+            <DatiRiepilogo>
+                <!--2.2.2-->
+                <AliquotaIVA t-esc="format_numbers(0.00)" />
+                <ImponibileImporto
+                    t-esc="format_monetary(0.0, currency)"
+                />
+                <Imposta t-esc="format_monetary(0.0, currency)" />
+            </DatiRiepilogo>
+        </template>
         <template id="account_invoice_it_FatturaPA_sede">
             <t t-set="indirizzo"><t
                     t-if="partner_id.street2"
@@ -566,21 +576,28 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-set="tax_line_ids"
                         t-value="record.line_ids.filtered(lambda line: line.tax_line_id)"
                     />
-                    <t t-foreach="tax_line_ids" t-as="tax_line">
-                        <t
-                            t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo"
-                        />
+                    <t t-if="not tax_line_ids">
+                         <t t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo_0"/>
                     </t>
+                    <t t-else="">
+                        <t t-foreach="tax_line_ids" t-as="tax_line">
+                            <t
+                                t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo"
+                            />
+                        </t>
+                    </t>
+                    
                 </DatiBeniServizi>
                 <!--                <DatiVeicoli>-->
                 <!--                    <Data t-esc=""/>-->
                 <!--                    <TotalePercorso t-esc=""/>-->
                 <!--                </DatiVeicoli>-->
-                <DatiPagamento t-if="record.invoice_payment_term_id">
-                    <t
-                        t-set="payments"
-                        t-value="record.line_ids.filtered(lambda line: line.account_id.user_type_id.type in ('receivable', 'payable'))"
-                    />
+                <t
+                    t-set="payments"
+                    t-value="record.line_ids.filtered(lambda line: line.account_id.user_type_id.type in ('receivable', 'payable'))"
+                />
+                <DatiPagamento t-if="record.invoice_payment_term_id and payments">
+
                     <!--                    <CondizioniPagamento><t t-if="len(payments) == 1">TP02</t><t t-else="">TP01</t></CondizioniPagamento>-->
                     <CondizioniPagamento
                         t-esc="record.invoice_payment_term_id.fatturapa_pt_id.code"
