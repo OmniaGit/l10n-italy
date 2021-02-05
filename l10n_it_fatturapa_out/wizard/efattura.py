@@ -97,7 +97,7 @@ class EFatturaOut:
         def format_numbers_two(number):
             # format number to str with 2 (event if it's .00)
             return "%.02f" % number
-
+        
         def format_phone(number):
             if not number:
                 return False

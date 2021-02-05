@@ -120,7 +120,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 <!-- [2.2.1.10] -->
                 <Tipo t-if="line.discount > 0" t-esc="'SC'" />
                 <Tipo t-if="not line.discount > 0" t-esc="'MG'" />
-                <Percentuale t-esc="format_numbers(abs(line.discount))" />
+                <Percentuale t-esc="format_numbers_two(abs(line.discount))" />
                 <!-- XXX                   <Importo t-esc=""/>-->
             </ScontoMaggiorazione>
         </template>
@@ -153,12 +153,14 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 />
                 <!--                <DataInizioPeriodo t-esc=""/>-->
                 <!--                <DataFinePeriodo t-esc=""/>-->
+                
                 <PrezzoUnitario t-esc="format_price(line)" />
                 <t
                     t-call="l10n_it_fatturapa_out.account_invoice_line_it_sconto_maggiorazione"
                 />
                 <PrezzoTotale t-esc="format_monetary(line.price_subtotal, currency)" />
                 <!-- without tax, must include any discounts and any extra charge-->
+                
                 <AliquotaIVA
                     t-if="tax_ids.amount_type == 'percent'"
                     t-esc="format_numbers(tax_ids.amount)"
