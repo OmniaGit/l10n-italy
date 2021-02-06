@@ -146,15 +146,26 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-if="line.name"
                         t-esc="encode_for_export(line.name, 1000)"
                     /><t t-if="not line.name" t-esc="'NO NAME'" /></Descrizione>
-                <Quantita t-esc="format_quantity(line)" />
+                <t t-set="is_qty_negative" t-value="line.quantity&lt;0"/>  
+                
+                <t t-if="is_qty_negative"> 
+                    <Quantita t-esc="format_quantity(line).replace('-','')" />
+                </t>
+                <t t-else="">
+                    <Quantita t-esc="format_quantity(line)" />
+                </t>
                 <UnitaMisura
                     t-if="line.product_uom_id.name"
                     t-esc="unidecode(line.product_uom_id.name)"
                 />
                 <!--                <DataInizioPeriodo t-esc=""/>-->
                 <!--                <DataFinePeriodo t-esc=""/>-->
-                
-                <PrezzoUnitario t-esc="format_price(line)" />
+                <t t-if="is_qty_negative">
+                    <PrezzoUnitario t-esc="'-' + format_price(line)" />
+                </t>
+                <t t-else="">
+                    <PrezzoUnitario t-esc="format_price(line)" />
+                </t>
                 <t
                     t-call="l10n_it_fatturapa_out.account_invoice_line_it_sconto_maggiorazione"
                 />
