@@ -592,14 +592,11 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                     <t t-if="not tax_line_ids">
                          <t t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo_0"/>
                     </t>
-                    <t t-else="">
                         <t t-foreach="tax_line_ids" t-as="tax_line">
                             <t
                                 t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo"
                             />
                         </t>
-                    </t>
-                    
                 </DatiBeniServizi>
                 <!--                <DatiVeicoli>-->
                 <!--                    <Data t-esc=""/>-->
