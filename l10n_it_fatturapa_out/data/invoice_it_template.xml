@@ -120,7 +120,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 <!-- [2.2.1.10] -->
                 <Tipo t-if="line.discount > 0" t-esc="'SC'" />
                 <Tipo t-if="not line.discount > 0" t-esc="'MG'" />
-                <Percentuale t-esc="format_numbers(abs(line.discount))" />
+                <Percentuale t-esc="format_numbers_two(abs(line.discount))" />
                 <!-- XXX                   <Importo t-esc=""/>-->
             </ScontoMaggiorazione>
         </template>
@@ -146,14 +146,26 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-if="line.name"
                         t-esc="encode_for_export(line.name, 1000)"
                     /><t t-if="not line.name" t-esc="'NO NAME'" /></Descrizione>
+                <t t-set="is_qty_negative" t-value="line.quantity&lt;0"/>  
+                
+                <t t-if="is_qty_negative"> 
+                    <Quantita t-esc="format_quantity(line).replace('-','')" />
+                </t>
+                <t t-else="">
                 <Quantita t-esc="format_quantity(line)" />
+                </t>
                 <UnitaMisura
                     t-if="line.product_uom_id.name"
                     t-esc="unidecode(line.product_uom_id.name)"
                 />
                 <!--                <DataInizioPeriodo t-esc=""/>-->
                 <!--                <DataFinePeriodo t-esc=""/>-->
+                <t t-if="is_qty_negative">
+                    <PrezzoUnitario t-esc="'-' + format_price(line)" />
+                </t>
+                <t t-else="">
                 <PrezzoUnitario t-esc="format_price(line)" />
+                </t>
                 <t
                     t-call="l10n_it_fatturapa_out.account_invoice_line_it_sconto_maggiorazione"
                 />
@@ -196,6 +208,16 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                     t-if="tax.law_reference"
                     t-esc="encode_for_export(tax.law_reference, 100)"
                 />
+            </DatiRiepilogo>
+        </template>
+        <template id="account_invoice_line_it_dati_riepilogo_0">
+            <DatiRiepilogo>
+                <!--2.2.2-->
+                <AliquotaIVA t-esc="format_numbers(0.00)" />
+                <ImponibileImporto
+                    t-esc="format_monetary(0.0, currency)"
+                />
+                <Imposta t-esc="format_monetary(0.0, currency)" />
             </DatiRiepilogo>
         </template>
         <template id="account_invoice_it_FatturaPA_sede">
@@ -258,7 +280,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                     <Email t-if="company_id.email" t-esc="company_id.email" />
                 </ContattiTrasmittente>
                 <PECDestinatario
-                    t-if="codice_destinatario == '0000000'"
+                    t-if="codice_destinatario == '0000000' and partner_id.pec_destinatario"
                     t-esc="partner_id.pec_destinatario"
                 />
             </DatiTrasmissione>
@@ -567,11 +589,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-value="record.line_ids.filtered(lambda line: line.tax_line_id)"
                     />
                     <t t-if="not tax_line_ids">
-                        <DatiRiepilogo>
-                            <AliquotaIVA>0.00</AliquotaIVA>
-                            <ImponibileImporto>0.00</ImponibileImporto>
-                            <Imposta>0.00</Imposta>
-                        </DatiRiepilogo>
+                         <t t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo_0"/>
                     </t>
                     <t t-foreach="tax_line_ids" t-as="tax_line">
                         <t
@@ -583,11 +601,12 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 <!--                    <Data t-esc=""/>-->
                 <!--                    <TotalePercorso t-esc=""/>-->
                 <!--                </DatiVeicoli>-->
-                <DatiPagamento t-if="record.invoice_payment_term_id">
                     <t
                         t-set="payments"
                         t-value="record.line_ids.filtered(lambda line: line.account_id.user_type_id.type in ('receivable', 'payable'))"
                     />
+                <DatiPagamento t-if="record.invoice_payment_term_id and payments">
+
                     <!--                    <CondizioniPagamento><t t-if="len(payments) == 1">TP02</t><t t-else="">TP01</t></CondizioniPagamento>-->
                     <CondizioniPagamento
                         t-esc="record.invoice_payment_term_id.fatturapa_pt_id.code"

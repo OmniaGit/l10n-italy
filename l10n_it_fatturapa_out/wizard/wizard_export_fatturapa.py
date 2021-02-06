@@ -83,6 +83,12 @@ class WizardExportFatturapa(models.TransientModel):
         return res
 
     def exportFatturaPA(self):
+        def getNewId():
+            out = id_generator()
+            while self.env["fatturapa.attachment.out"].file_name_exists(out):
+                out = id_generator()
+            return out
+            
         invoices_by_partner = self.group_invoices_by_partner()
         attachments = self.env["fatturapa.attachment.out"]
         for partner_id in invoices_by_partner:
@@ -91,11 +97,7 @@ class WizardExportFatturapa(models.TransientModel):
             context_partner = self.env.context.copy()
             context_partner.update({"lang": partner.lang})
 
-            progressivo_invio = id_generator()
-            while self.env["fatturapa.attachment.out"].file_name_exists(
-                progressivo_invio
-            ):
-                progressivo_invio = id_generator()
+            progressivo_invio = getNewId()
 
             invoice_ids = (
                 self.env["account.move"]
@@ -103,13 +105,27 @@ class WizardExportFatturapa(models.TransientModel):
                 .browse(invoice_ids)
             )
 
-            fatturapa = EFatturaOut(self, partner, invoice_ids, progressivo_invio)
-
-            attach = self.saveAttachment(fatturapa, progressivo_invio)
+            if self.env.context.get('group_invoice', False):
+                fatturapa = EFatturaOut(self.env.company,
+                                        partner,
+                                        invoice_ids,
+                                        progressivo_invio)
+                attach = self.saveAttachment(fatturapa,
+                                             progressivo_invio)
             attachments |= attach
 
             invoice_ids.write({"fatturapa_attachment_out_id": attach.id})
-
+            else:
+                for invoice_id in invoice_ids:
+                    progressivo_invio = getNewId()
+                    fatturapa = EFatturaOut(self.env.company,
+                                            partner,
+                                            [invoice_id],
+                                            progressivo_invio)
+                    attach = self.saveAttachment(fatturapa,
+                                                 progressivo_invio)
+                    attachments |= attach
+                    invoice_id.write({"fatturapa_attachment_out_id": attach.id})               
         action = {
             "name": "Export Electronic Invoice",
             "res_model": "fatturapa.attachment.out",
