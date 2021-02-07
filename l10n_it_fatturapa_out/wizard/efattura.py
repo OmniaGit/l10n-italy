@@ -56,8 +56,7 @@ class EFatturaOut:
 
     def validate(self, tree):
         ret = self._validator(tree)
-        errors = self._validator.error_log
-        return (ret, errors)
+        return (ret, self._validator.e_invoice_error_log)
 
     def to_xml(self, env):  # noqa: C901
         """Create the xml file content.
@@ -165,6 +164,14 @@ class EFatturaOut:
             if not europe or not country or country in europe.country_ids:
                 return True
             return False
+        
+        def there_is_note(line_ids):
+            out=False
+            for line in line_ids:
+                if line.display_type in ('line_section','line_note'):
+                    out=True
+                    break
+            return out
 
         if self.partner_id.commercial_partner_id.is_pa:
             # check value code
@@ -195,6 +202,7 @@ class EFatturaOut:
             "in_eu": in_eu,
             "unidecode": unidecode,
             "wizard": self.wizard,
+            "there_is_note": there_is_note,
             # "base64": base64,
         }
         content = env.ref(
