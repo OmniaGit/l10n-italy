@@ -589,7 +589,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-set="tax_line_ids"
                         t-value="record.line_ids.filtered(lambda line: line.tax_line_id)"
                     />
-                    <t t-if="there_is_note(record.invoice_line_ids)">
+                    <t t-if="there_is_note(record.invoice_line_ids) or not tax_line_ids">
                        <DatiRiepilogo>
 	                       <!--2.2.2-->
 	                       <AliquotaIVA>22.00</AliquotaIVA>

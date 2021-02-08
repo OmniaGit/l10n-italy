@@ -167,11 +167,14 @@ class EFatturaOut:
         
         def there_is_note(line_ids):
             out=False
+            tax=False
             for line in line_ids:
                 if line.display_type in ('line_section','line_note'):
                     out=True
-                    break
-            return out
+                for tax_id in line.tax_ids:
+                    if tax_id.amount-22.00<0.001:
+                        tax=True
+            return out and not tax
 
         if self.partner_id.commercial_partner_id.is_pa:
             # check value code
