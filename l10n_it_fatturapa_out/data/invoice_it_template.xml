@@ -120,7 +120,13 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 <!-- [2.2.1.10] -->
                 <Tipo t-if="line.discount > 0" t-esc="'SC'" />
                 <Tipo t-if="not line.discount > 0" t-esc="'MG'" />
-                <Percentuale t-esc="format_numbers_two(abs(line.discount))" />
+                <t t-set="importo" t-value="get_importo(line)" />
+                <t t-if="importo">
+                    <Importo t-esc="format_numbers(importo)"/>
+                </t>
+                <t t-else="">
+                    <Percentuale t-esc="format_numbers_two(abs(line.discount))" />
+                </t>
                 <!-- XXX                   <Importo t-esc=""/>-->
             </ScontoMaggiorazione>
         </template>
@@ -177,7 +183,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 <PrezzoTotale t-esc="format_monetary(line.price_subtotal, currency)" />
                 <!-- without tax, must include any discounts and any extra charge-->
                 <t t-if="is_note">
-                    <AliquotaIVA>22.00</AliquotaIVA>
+                    <AliquotaIVA t-esc="format_numbers(22)"/>
                 </t>
                 <t t-else="">
 	                <AliquotaIVA
@@ -202,6 +208,8 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
         </template>
 
         <template id="account_invoice_line_it_dati_riepilogo">
+        
+        <!--  -->
             <t t-set="tax" t-value="tax_line.tax_line_id" />
             <DatiRiepilogo>
                 <!--2.2.2-->
@@ -589,16 +597,20 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-set="tax_line_ids"
                         t-value="record.line_ids.filtered(lambda line: line.tax_line_id)"
                     />
-                    <t t-if="there_is_note(record.invoice_line_ids) or not tax_line_ids">
+                    <t t-foreach="get_all_taxes(record)" t-as="tax_data">
                        <DatiRiepilogo>
 	                       <!--2.2.2-->
-	                       <AliquotaIVA>22.00</AliquotaIVA>
-	                       <ImponibileImporto t-esc="format_monetary(0.0, currency)"/>
-	                       <Imposta t-esc="format_monetary(0.0, currency)" />
+	                       <AliquotaIVA t-esc="tax_data['AliquotaIVA']"/>
+	                       <Natura t-if="tax_data.get('Natura', False)" t-esc="tax_data['Natura']" />
+	                       <ImponibileImporto t-esc="format_monetary(tax_data['ImponibileImporto'], currency)"/>
+	                       <Imposta t-esc="format_monetary(tax_data['Imposta'], currency)" />
                        </DatiRiepilogo>
                     </t>
-                    <t t-foreach="tax_line_ids" t-as="tax_line">
-                        <t t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo"/>
+                    
+                    <t t-if="False"> <!-- old version of tax calculation -->
+	                    <t t-foreach="tax_line_ids" t-as="tax_line">
+	                        <t t-call="l10n_it_fatturapa_out.account_invoice_line_it_dati_riepilogo"/>
+	                    </t>
                     </t>
                 </DatiBeniServizi>
                 <!--                <DatiVeicoli>-->

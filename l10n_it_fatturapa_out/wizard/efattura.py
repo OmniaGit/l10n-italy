@@ -165,17 +165,70 @@ class EFatturaOut:
                 return True
             return False
         
-        def there_is_note(line_ids):
-            out=False
-            tax=False
-            for line in line_ids:
-                if line.display_type in ('line_section','line_note'):
-                    out=True
+                       
+# 'AliquotaIVA':'',
+# 'Natura':'',
+# 'SpeseAccessorie':'',
+# 'Arrotondamento':'',
+# 'ImponibileImporto':'',
+# 'Imposta':'',
+# 'EsigibilitaIVA':'',
+# 'RiferimentoNormativo':'',
+        
+        def get_all_taxes(record):
+            missing_amount = []
+            out = {}
+            out_computed = {}
+            there_is_a_note = False
+            tax_ids = record.line_ids.filtered(lambda line: line.tax_line_id)
+            for tax_id in tax_ids:
+                tax_line_id = tax_id.tax_line_id
+                aliquota = format_numbers(tax_line_id.amount)
+                key = "%s_%s" % (aliquota, tax_line_id.kind_id.code)
+                out_computed[key] = {'AliquotaIVA': aliquota,         
+                                 'Natura': tax_line_id.kind_id.code,              
+                                 #'Arrotondamento':'',      
+                                 'ImponibileImporto': tax_id.tax_base_amount,   
+                                 'Imposta': tax_id.price_total,             
+                                 'EsigibilitaIVA':tax_line_id.payability}
+                if tax_line_id.law_reference: 
+                    out_computed[aliquota]['RiferimentoNormativo'] = encode_for_export(tax_line_id.law_reference, 100)
+            for line in record.invoice_line_ids:
+                if line.display_type in ('line_section','line_note') and not there_is_a_note:
+                    there_is_a_note=True
                 for tax_id in line.tax_ids:
-                    if tax_id.amount-22.00<0.001:
-                        tax=True
-            return out and not tax
-
+                    aliquota = format_numbers(tax_id.amount)
+                    key = "%s_%s" % (aliquota, tax_id.kind_id.code)
+                    if key in out_computed:
+                        continue
+                    if key not in out:
+                        out[key] = {'AliquotaIVA': aliquota,         
+                                    'Natura': tax_id.kind_id.code,              
+                                    #'Arrotondamento':'',      
+                                    'ImponibileImporto': line.price_subtotal,   
+                                    'Imposta': 0.0,             
+                                    'EsigibilitaIVA': tax_id.payability}
+                        if tax_id.law_reference: 
+                           out[key]['RiferimentoNormativo'] = encode_for_export(tax_id.law_reference, 100)
+                    else:
+                        out[aliquota]['ImponibileImporto'] += line.price_subtotal  
+                        out[aliquota]['Imposta'] += 0.0
+            out.update(out_computed)
+            if there_is_a_note: 
+                new_key = '22.00_False'
+                if new_key not in out:  
+                    out[new_key] = {'AliquotaIVA': '22.00',         
+                                    'ImponibileImporto': 0.00,   
+                                    'Imposta': 0.00}
+            return out.values()
+        
+        def get_importo(line):
+            str_number = str(line.discount)
+            number = str_number[::-1].find('.')
+            if number<=2:
+                return False
+            return line.price_unit * line.discount/100
+        
         if self.partner_id.commercial_partner_id.is_pa:
             # check value code
             code = self.partner_id.ipa_code
@@ -205,7 +258,8 @@ class EFatturaOut:
             "in_eu": in_eu,
             "unidecode": unidecode,
             "wizard": self.wizard,
-            "there_is_note": there_is_note,
+            "get_all_taxes": get_all_taxes,
+            "get_importo": get_importo,
             # "base64": base64,
         }
         content = env.ref(
