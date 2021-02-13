@@ -214,16 +214,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 />
             </DatiRiepilogo>
         </template>
-        <template id="account_invoice_line_it_dati_riepilogo_0">
-            <DatiRiepilogo>
-                <!--2.2.2-->
-                <AliquotaIVA t-esc="format_numbers(0.00)" />
-                <ImponibileImporto
-                    t-esc="format_monetary(0.0, currency)"
-                />
-                <Imposta t-esc="format_monetary(0.0, currency)" />
-            </DatiRiepilogo>
-        </template>
+
         <template id="account_invoice_it_FatturaPA_sede">
             <t t-set="indirizzo"><t
                     t-if="partner_id.street2"
