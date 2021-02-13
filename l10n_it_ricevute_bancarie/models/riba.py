@@ -122,10 +122,7 @@ class RibaList(models.Model):
     def confirm(self):
         for distinta in self:
             for line in distinta.line_ids:
-                try:
                     line.confirm()
-                except Exception as ex:
-                    raise ex
 
     def riba_cancel(self):
         for distinta in self:
