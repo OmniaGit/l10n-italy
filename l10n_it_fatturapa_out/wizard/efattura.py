@@ -248,18 +248,10 @@ class EFatturaOut:
             code = self.partner_id.ipa_code
         else:
             code = self.partner_id.codice_destinatario
-
-        price_subtotals = {}
-        for invoice in self.invoices:
-            inv_subtotals = {}
-            for line in invoice.invoice_line_ids:
-                for tax_id in line.tax_ids:
-                    inv_subtotals[tax_id.id] = (
-                        inv_subtotals.get(tax_id.id, 0.0) + line.price_subtotal
-                    )
-            price_subtotals[invoice.id] = inv_subtotals
-
-        all_taxes = get_all_taxes()
+        
+        all_taxes = []
+        for move_id in self.invoices:
+            all_taxes = list(get_all_taxes(move_id))
         # Create file content.
         template_values = {
             "formato_trasmissione": "FPA12" if self.partner_id.is_pa else "FPR12",
@@ -284,7 +276,7 @@ class EFatturaOut:
             "unidecode": unidecode,
             "wizard": self.wizard,
             "get_importo": get_importo,
-            "get_all_taxes": all_taxes,
+            "get_all_taxes": get_all_taxes,
             "default_note_tax": all_taxes[-1]["AliquotaIVA"] if all_taxes else "0.00",
             # "base64": base64,
         }
