@@ -56,7 +56,7 @@ class EFatturaOut:
 
     def validate(self, tree):
         ret = self._validator(tree)
-        errors = self._validator.error_log
+        errors = self._validator.e_invoice_error_log
         return (ret, errors)
 
     def to_xml(self, env):  # noqa: C901
