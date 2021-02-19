@@ -118,23 +118,24 @@ class EFatturaOut:
             res = "{prezzo:.{precision}f}".format(prezzo=res, precision=price_precision)
             return res
 
-        def format_quantity(line):
+        def format_quantity_value(quantity):
             uom_precision = env["decimal.precision"].precision_get(
                 "Product Unit of Measure"
             )
             if uom_precision < 2:
                 uom_precision = 2
-
-            quantity = line.quantity + 0
-
             # lo SdI non accetta quantità negative, quindi invertiamo price_unit
             # e quantity (vd. format_price)
-            if line.quantity < 0:
+            if quantity < 0:
                 quantity = -quantity
-
-            # XXX arrotondamento?
             res = ("{qta:.{precision}f}".format(qta=quantity, precision=uom_precision),)
             return res[0]
+                
+                            
+        def format_quantity(line):
+            quantity = line.quantity + 0
+            # XXX arrotondamento?
+            return format_quantity_value(quantity)
 
         def get_vat_number(vat):
             # return vat[2:].replace(' ', '') if vat else ""
@@ -266,6 +267,7 @@ class EFatturaOut:
             "format_numbers_two": format_numbers_two,
             "format_phone": format_phone,
             "format_quantity": format_quantity,
+            'format_quantity_value': format_quantity_value,
             "format_price": format_price,
             "get_vat_number": get_vat_number,
             "get_vat_country": get_vat_country,

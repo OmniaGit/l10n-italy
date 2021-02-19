@@ -158,7 +158,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-esc="encode_for_export(line.name, 1000)"
                     /><t t-if="not line.name" t-esc="'NO NAME'" /></Descrizione>
                 <Quantita t-if="not is_note" t-esc="format_quantity(line)" />
-                <Quantita t-if="is_note" t-esc="0.00" />
+                <Quantita t-if="is_note" t-esc="format_quantity_value(0.00)" />
                 <UnitaMisura
                     t-if="line.product_uom_id.name"
                     t-esc="unidecode(line.product_uom_id.name)"
