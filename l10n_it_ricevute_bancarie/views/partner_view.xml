@@ -14,7 +14,7 @@
 				<label for="group_riba"/>
                 <field name="group_riba"/>
             </group>
-        </field>
+            </field>
     </record>
 
 </odoo>

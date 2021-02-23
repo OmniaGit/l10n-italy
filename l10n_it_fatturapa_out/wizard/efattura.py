@@ -40,7 +40,7 @@ class FPAValidator(etree.XMLSchema):
             validation="lax",
             allow="local",
             loglevel=20,
-                )
+        )
 
     def __call__(self, *args, **kwargs):
         self.e_invoice_error_log = list(self._validator.iter_errors(*args, **kwargs))
@@ -56,7 +56,7 @@ class EFatturaOut:
 
     def validate(self, tree):
         ret = self._validator(tree)
-        errors = self._validator.e_invoice_error_log
+        errors = self._validator.error_log
         return (ret, errors)
 
     def to_xml(self, env):  # noqa: C901
@@ -90,7 +90,7 @@ class EFatturaOut:
         def format_numbers_two(number):
             # format number to str with 2 (event if it's .00)
             return "%.02f" % number
-        
+
         def format_phone(number):
             if not number:
                 return False
@@ -118,24 +118,23 @@ class EFatturaOut:
             res = "{prezzo:.{precision}f}".format(prezzo=res, precision=price_precision)
             return res
 
-        def format_quantity_value(quantity):
+        def format_quantity(line):
             uom_precision = env["decimal.precision"].precision_get(
                 "Product Unit of Measure"
             )
             if uom_precision < 2:
                 uom_precision = 2
+
+            quantity = line.quantity + 0
+
             # lo SdI non accetta quantità negative, quindi invertiamo price_unit
             # e quantity (vd. format_price)
-            if quantity < 0:
+            if line.quantity < 0:
                 quantity = -quantity
+
+            # XXX arrotondamento?
             res = ("{qta:.{precision}f}".format(qta=quantity, precision=uom_precision),)
             return res[0]
-                
-                            
-        def format_quantity(line):
-            quantity = line.quantity + 0
-            # XXX arrotondamento?
-            return format_quantity_value(quantity)
 
         def get_vat_number(vat):
             # return vat[2:].replace(' ', '') if vat else ""
@@ -171,13 +170,21 @@ class EFatturaOut:
             )
             return encode_for_export(attachment_name, 60)
 
+        def get_type_attachment(doc_id):
+            mini_map = {
+                "application/pdf": "PDF",
+                "image/png": "PNG",
+            }
+            attachment_type = mini_map.get(doc_id.mimetype, False)
+            return encode_for_export(attachment_type, 10) if attachment_type else False
+
         def in_eu(partner):
             europe = env.ref("base.europe", raise_if_not_found=False)
             country = partner.country_id
             if not europe or not country or country in europe.country_ids:
                 return True
             return False
-        
+
         def get_all_taxes(record):
             out = {}
             out_computed = {}
@@ -190,12 +197,12 @@ class EFatturaOut:
                 out_computed[key] = {
                     "AliquotaIVA": aliquota,
                     "Natura": tax_line_id.kind_id.code,
-                                 #'Arrotondamento':'',      
+                    # 'Arrotondamento':'',
                     "ImponibileImporto": tax_id.tax_base_amount,
                     "Imposta": tax_id.price_total,
                     "EsigibilitaIVA": tax_line_id.payability,
                 }
-                if tax_line_id.law_reference: 
+                if tax_line_id.law_reference:
                     out_computed[key]["RiferimentoNormativo"] = encode_for_export(
                         tax_line_id.law_reference, 100
                     )
@@ -204,7 +211,7 @@ class EFatturaOut:
                     line.display_type in ("line_section", "line_note")
                     and not there_is_a_note
                 ):
-                    there_is_a_note=True
+                    there_is_a_note = True
                 for tax_id in line.tax_ids:
                     aliquota = format_numbers(tax_id.amount)
                     key = "{}_{}".format(aliquota, tax_id.kind_id.code)
@@ -214,12 +221,12 @@ class EFatturaOut:
                         out[key] = {
                             "AliquotaIVA": aliquota,
                             "Natura": tax_id.kind_id.code,
-                                    #'Arrotondamento':'',      
+                            # 'Arrotondamento':'',
                             "ImponibileImporto": line.price_subtotal,
                             "Imposta": 0.0,
                             "EsigibilitaIVA": tax_id.payability,
                         }
-                        if tax_id.law_reference: 
+                        if tax_id.law_reference:
                             out[key]["RiferimentoNormativo"] = encode_for_export(
                                 tax_id.law_reference, 100
                             )
@@ -227,32 +234,33 @@ class EFatturaOut:
                         out[key]["ImponibileImporto"] += line.price_subtotal
                         out[key]["Imposta"] += 0.0
             out.update(out_computed)
-            if there_is_a_note: 
+            if there_is_a_note:
                 new_key = "22.00_False"
-                if new_key not in out:  
+                if new_key not in out:
                     out[new_key] = {
                         "AliquotaIVA": "22.00",
                         "ImponibileImporto": 0.00,
                         "Imposta": 0.00,
                     }
-            return out.values()
-        
+            return list(out.values())
+
         def get_importo(line):
             str_number = str(line.discount)
             number = str_number[::-1].find(".")
-            if number<=2:
+            if number <= 2:
                 return False
-            return line.price_unit * line.discount/100
-        
+            return line.price_unit * line.discount / 100
+
+        def get_default_note_tax(record):
+            all_taxes = get_all_taxes(record)
+            return all_taxes[0]["AliquotaIVA"] if all_taxes else "0.00"
+
         if self.partner_id.commercial_partner_id.is_pa:
             # check value code
             code = self.partner_id.ipa_code
         else:
             code = self.partner_id.codice_destinatario
-        
-        all_taxes = []
-        for move_id in self.invoices:
-            all_taxes = list(get_all_taxes(move_id))
+
         # Create file content.
         template_values = {
             "formato_trasmissione": "FPA12" if self.partner_id.is_pa else "FPR12",
@@ -267,19 +275,19 @@ class EFatturaOut:
             "format_numbers_two": format_numbers_two,
             "format_phone": format_phone,
             "format_quantity": format_quantity,
-            'format_quantity_value': format_quantity_value,
             "format_price": format_price,
             "get_vat_number": get_vat_number,
             "get_vat_country": get_vat_country,
             "get_causale": get_causale,
             "get_nome_attachment": get_nome_attachment,
+            "get_type_attachment": get_type_attachment,
             "codice_destinatario": code.upper(),
             "in_eu": in_eu,
             "unidecode": unidecode,
             "wizard": self.wizard,
             "get_importo": get_importo,
             "get_all_taxes": get_all_taxes,
-            "default_note_tax": all_taxes[-1]["AliquotaIVA"] if all_taxes else "0.00",
+            "get_default_note_tax": get_default_note_tax,
             # "base64": base64,
         }
         content = env.ref(

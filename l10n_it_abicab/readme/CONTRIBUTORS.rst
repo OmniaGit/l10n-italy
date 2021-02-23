@@ -5,7 +5,4 @@
 * Davide Corio <davide.corio@abstract.it>
 * Francesco Apruzzese <f.apruzzese@apuliasoftware.it>
 * Sergio Zanchetta  <https://github.com/primes2h>
-<<<<<<< HEAD
-=======
 * Matteo Boscolo <https://www.omniasolutions.website>
->>>>>>> branch '14.0_develop' of https://github.com/OmniaGit/l10n-italy.git

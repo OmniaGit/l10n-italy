@@ -158,7 +158,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         t-esc="encode_for_export(line.name, 1000)"
                     /><t t-if="not line.name" t-esc="'NO NAME'" /></Descrizione>
                 <Quantita t-if="not is_note" t-esc="format_quantity(line)" />
-                <Quantita t-if="is_note" t-esc="format_quantity_value(0.00)" />
+                <Quantita t-if="is_note">0.00</Quantita>
                 <UnitaMisura
                     t-if="line.product_uom_id.name"
                     t-esc="unidecode(line.product_uom_id.name)"
@@ -169,17 +169,17 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                     <PrezzoUnitario t-esc="'-' + format_price(line)" />
                 </t>
                 <t t-else="">
-                    <PrezzoUnitario t-esc="format_price(line)" />
+                <PrezzoUnitario t-esc="format_price(line)" />
                 </t>
                 <t
                     t-call="l10n_it_fatturapa_out.account_invoice_line_it_sconto_maggiorazione"
                 />
                 <PrezzoTotale t-esc="format_monetary(line.price_subtotal, currency)" />
-                <AliquotaIVA t-if="is_note" t-esc="default_note_tax" />
-	                <AliquotaIVA
+                <AliquotaIVA t-if="is_note" t-esc="get_default_note_tax(record)" />
+                <AliquotaIVA
                     t-if="not is_note"
-	                    t-esc="format_numbers(tax_ids.amount)"
-	                />
+                    t-esc="format_numbers(tax_ids.amount)"
+                />
                 <t t-call="l10n_it_fatturapa_out.account_invoice_line_ritenuta" />
                 <Natura t-if="tax_ids.kind_id.code" t-esc="tax_ids.kind_id.code" />
                 <RiferimentoAmministrazione
@@ -585,8 +585,8 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                     />
                     <t t-foreach="get_all_taxes(record)" t-as="tax_data">
                        <DatiRiepilogo>
-	                       <!--2.2.2-->
-	                       <AliquotaIVA t-esc="tax_data['AliquotaIVA']"/>
+                              <!--2.2.2-->
+                              <AliquotaIVA t-esc="tax_data['AliquotaIVA']" />
                               <Natura
                                 t-if="tax_data.get('Natura', False)"
                                 t-esc="tax_data['Natura']"
@@ -619,7 +619,6 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                     t-value="record.line_ids.filtered(lambda line: line.account_id.user_type_id.type in ('receivable', 'payable'))"
                 />
                 <DatiPagamento t-if="record.invoice_payment_term_id and payments">
-
                     <!--                    <CondizioniPagamento><t t-if="len(payments) == 1">TP02</t><t t-else="">TP01</t></CondizioniPagamento>-->
                     <CondizioniPagamento
                         t-esc="record.invoice_payment_term_id.fatturapa_pt_id.code"
@@ -670,10 +669,16 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         </DettaglioPagamento>
                     </t>
                 </DatiPagamento>
-                <Allegati t-foreach="record.fatturapa_doc_attachments" t-as="doc_id">
+                <Allegati
+                    t-foreach="record.fatturapa_doc_attachments.ir_attachment_id"
+                    t-as="doc_id"
+                >
                     <NomeAttachment t-esc="get_nome_attachment(doc_id)" />
                     <!--                    <AlgoritmoCompressione t-esc=""/>-->
-                    <!--                    <FormatoAttachment>PDF</FormatoAttachment>-->
+                    <FormatoAttachment
+                        t-if="get_type_attachment(doc_id)"
+                        t-esc="get_type_attachment(doc_id)"
+                    />
                     <!--                    <DescrizioneAttachment  t-esc=""/>-->
                     <Attachment t-esc="doc_id.datas" />
                 </Allegati>

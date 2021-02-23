@@ -122,7 +122,7 @@ class RibaList(models.Model):
     def confirm(self):
         for distinta in self:
             for line in distinta.line_ids:
-                    line.confirm()
+                line.confirm()
 
     def riba_cancel(self):
         for distinta in self:
@@ -316,6 +316,7 @@ class RibaListLine(models.Model):
             to_be_reconciled = self.env['account.move.line']
             riba_move_line_name = ''
             for riba_move_line in line.move_line_ids:
+                total_credit += riba_move_line.amount
                 if str(riba_move_line.move_line_id.move_id.sequence_number) and str(riba_move_line.move_line_id.move_id.sequence_number) not in riba_move_line_name:
                     riba_move_line_name = ' '.join([
                         riba_move_line_name,
@@ -325,25 +326,27 @@ class RibaListLine(models.Model):
                     riba_move_line_name = ' '.join([
                         riba_move_line_name, riba_move_line.move_line_id.name
                     ]).lstrip()
-                    
-                move_line_vals = {'name': (riba_move_line.move_line_id.move_id and
-                                           riba_move_line.move_line_id.move_id.sequence_number or
-                                           riba_move_line.move_line_id.name),
-                                  'partner_id': line.partner_id.id,
-                                  'account_id': (riba_move_line.move_line_id.account_id.id),
-                                  'move_id': move.id} 
-                amount = riba_move_line.amount
-                total_credit += amount
-                if amount > 0:
-                    move_line_vals['credit'] =  amount
-                    move_line_vals['debit'] = 0.0
-                else:
-                    move_line_vals['credit'] = 0.0
-                    move_line_vals['debit'] = abs(amount)         
-                move_line = move_line_model.with_context({'check_move_validity': False}).create(move_line_vals)
+                move_line = move_line_model.with_context({
+                    'check_move_validity': False
+                }).create(
+                    {
+                        'name': (
+                            riba_move_line.move_line_id.move_id and
+                            riba_move_line.move_line_id.move_id.sequence_number or
+                            riba_move_line.move_line_id.name),
+                        'partner_id': line.partner_id.id,
+                        'account_id': (
+                            riba_move_line.move_line_id.account_id.id),
+                        'credit': riba_move_line.amount,
+                        'debit': 0.0,
+                        'move_id': move.id,
+                    }
+                )
                 to_be_reconciled |= move_line
                 to_be_reconciled |= riba_move_line.move_line_id
-            values = {
+            move_line_model.with_context({
+                'check_move_validity': False
+            }).create({
                 'name': 'C/O %s-%s Ref. %s - %s' % (
                     line.distinta_id.name,
                     line.sequence,
@@ -357,16 +360,10 @@ class RibaListLine(models.Model):
                 ),
                 'partner_id': line.partner_id.id,
                 'date_maturity': line.due_date,
-
+                'credit': 0.0,
+                'debit': total_credit,
                 'move_id': move.id,
-            }
-            if total_credit > 0:
-                values['credit'] =  0.0
-                values['debit'] = round(abs(total_credit), 2)
-            else:
-                values['credit'] = round(abs(total_credit), 2)
-                values['debit'] = 0.0
-            move_line_model.with_context({'check_move_validity': False}).create(values)
+            })
             move.post()
             to_be_reconciled.reconcile()
             line.write({

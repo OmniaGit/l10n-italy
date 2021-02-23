@@ -34,4 +34,3 @@ class AccountInvoice(models.Model):
                 )
         res = super(AccountInvoice, self).action_invoice_cancel()
         return res
-
