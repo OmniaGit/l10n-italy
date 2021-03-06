@@ -165,12 +165,7 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 />
                 <!--                <DataInizioPeriodo t-esc=""/>-->
                 <!--                <DataFinePeriodo t-esc=""/>-->
-                <t t-if="is_qty_negative">
-                    <PrezzoUnitario t-esc="'-' + format_price(line)" />
-                </t>
-                <t t-else="">
                 <PrezzoUnitario t-esc="format_price(line)" />
-                </t>
                 <t
                     t-call="l10n_it_fatturapa_out.account_invoice_line_it_sconto_maggiorazione"
                 />
@@ -214,7 +209,6 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                 />
             </DatiRiepilogo>
         </template>
-
         <template id="account_invoice_it_FatturaPA_sede">
             <t t-set="indirizzo"><t
                     t-if="partner_id.street2"
@@ -542,11 +536,6 @@ e 'line' per riga di fattura (a seconda del livello in cui sono chiamati)
                         <!--                            <Importo t-esc=""/>-->
                         <!--                        </ScontoMaggiorazione>-->
                         <ImportoTotaleDocumento
-                            t-if="record.split_payment"
-                            t-esc="format_numbers_two(record.amount_total + record.amount_sp)"
-                        />
-                        <ImportoTotaleDocumento
-                            t-if="not record.split_payment"
                             t-esc="format_numbers_two(record.amount_total)"
                         />
                         <!--                        <Arrotondamento t-esc=""/>-->

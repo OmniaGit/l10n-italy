@@ -20,19 +20,20 @@ _logger = logging.getLogger(__name__)
 # from from odoo.addons.l10n_it_fatturapa import FPAValidator
 
 
-class FPAValidator(etree.XMLSchema):
+# fix <xs:import namespace="http://www.w3.org/2000/09/xmldsig#"
+#      schemaLocation="http://www.w3.org/TR/2002/REC-xmldsig-core-20020212/xmldsig-core-schema.xsd" /> # noqa: B950
+class FPAValidator:
 
     _XSD_SCHEMA = "Schema_del_file_xml_FatturaPA_versione_1.2.1.xsd"
     _xml_schema_1_2_1 = get_module_resource(
-        "l10n_it_fatturapa", "bindings", "xsd", _XSD_SCHEMA
+        "l10n_it_fatturapa", "data", "xsd", _XSD_SCHEMA
     )
-    _old_xsd_specs = get_module_resource("l10n_it_fatturapa",
-                                         "bindings",
-                                         "xsd",
-                                         "xmldsig-core-schema.xsd")
+    _old_xsd_specs = get_module_resource(
+        "l10n_it_fatturapa", "data", "xsd", "xmldsig-core-schema.xsd"
+    )
 
     def __init__(self):
-        self.e_invoice_error_log = []
+        self.error_log = []
         locations = {"http://www.w3.org/2000/09/xmldsig#": self._old_xsd_specs}
         self._validator = xmlschema.XMLSchema(
             self._xml_schema_1_2_1,
@@ -43,8 +44,8 @@ class FPAValidator(etree.XMLSchema):
         )
 
     def __call__(self, *args, **kwargs):
-        self.e_invoice_error_log = list(self._validator.iter_errors(*args, **kwargs))
-        return not self.e_invoice_error_log
+        self.error_log = list(self._validator.iter_errors(*args, **kwargs))
+        return not self.error_log
 
 
 DEFAULT_INVOICE_ITALIAN_DATE_FORMAT = "%Y-%m-%d"

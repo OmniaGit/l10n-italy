@@ -1180,7 +1180,7 @@ class WizardImportFatturapa(models.TransientModel):
         invoice_id = invoice.id
         SalDatas = FatturaBody.DatiGenerali.DatiSAL
         if SalDatas:
-            SalModel = self.env["faturapa.activity.progress"]
+            SalModel = self.env["fatturapa.activity.progress"]
             for SalDataLine in SalDatas:
                 SalModel.create(
                     {
@@ -1373,7 +1373,7 @@ class WizardImportFatturapa(models.TransientModel):
     def set_summary_data(self, FatturaBody, invoice):
         invoice_id = invoice.id
         Summary_datas = FatturaBody.DatiBeniServizi.DatiRiepilogo
-        summary_data_model = self.env["faturapa.summary.data"]
+        summary_data_model = self.env["fatturapa.summary.data"]
         if Summary_datas:
             for summary in Summary_datas:
                 summary_line = {
@@ -1419,7 +1419,6 @@ class WizardImportFatturapa(models.TransientModel):
         if self.e_invoice_detail_level == "0":
             return
 
-        pay_acc_id = partner.property_account_payable_id.id
         invoice_lines = []
         invoice_line_model = self.env["account.move.line"]
         if self.e_invoice_detail_level == "1":

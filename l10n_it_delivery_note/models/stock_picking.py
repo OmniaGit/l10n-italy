@@ -261,6 +261,7 @@ class StockPicking(models.Model):
                     "'picking_type_code' field value."
                 )
             )
+
         if (
             len(self.mapped("partner_id")) != 1
             and self.location_dest_id.usage == "customer"

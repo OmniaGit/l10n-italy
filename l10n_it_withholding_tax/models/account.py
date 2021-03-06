@@ -49,9 +49,9 @@ class AccountPartialReconcile(models.Model):
             ml_ids.append(vals.get("debit_move_id"))
         if vals.get("credit_move_id"):
             ml_ids.append(vals.get("credit_move_id"))
-        move_lines = self.env["account.move.line"].search([('id', 'in', ml_ids)])
+        move_lines = self.env["account.move.line"].browse(ml_ids)
         for ml in move_lines:
-            domain = [("id", "=", ml.move_id.id)]
+            domain = [("move_id", "=", ml.move_id.id)]
             invoice = self.env["account.move"].search(domain)
             if invoice:
                 break

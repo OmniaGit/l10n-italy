@@ -99,37 +99,23 @@ class WizardExportFatturapa(models.TransientModel):
             context_partner = self.env.context.copy()
             context_partner.update({"lang": partner.lang})
 
-            progressivo_invio = getNewId()
-
             invoice_ids = (
                 self.env["account.move"]
                 .with_context(context_partner)
                 .browse(invoice_ids)
             )
 
-            if self.env.context.get('group_invoice', False):
-                fatturapa = EFatturaOut(self.env.company,
-                                        partner,
-                                        invoice_ids,
-                                        progressivo_invio)
-                attach = self.saveAttachment(fatturapa,
-                                             progressivo_invio)
+            invoice_ids.preventive_checks()
+
+            # generate attachments (PDF version of invoice)
+            for inv in invoice_ids:
+                if not inv.fatturapa_doc_attachments and self.report_print_menu:
+                    self.generate_attach_report(inv)
 
             # https://more-itertools.readthedocs.io/en/stable/_modules/more_itertools/recipes.html#take # noqa: B950
             def take(n, iterable):
                 """Return first *n* items of the iterable as a list.
-                invoice_ids.write({"fatturapa_attachment_out_id": attach.id})
-            else:
-                for invoice_id in invoice_ids:
-                    progressivo_invio = getNewId()
-                    fatturapa = EFatturaOut(self.env.company,
-                                            partner,
-                                            [invoice_id],
-                                            progressivo_invio)
-                    attach = self.saveAttachment(fatturapa,
-                                                 progressivo_invio)
-                    attachments |= attach
-                    invoice_id.write({"fatturapa_attachment_out_id": attach.id})               
+
                     >>> take(3, range(10))
                     [0, 1, 2]
 
