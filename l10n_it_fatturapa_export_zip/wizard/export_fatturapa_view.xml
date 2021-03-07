@@ -23,6 +23,6 @@
         <field name="target">new</field>
         <field name="binding_model_id" ref="model_fatturapa_attachment_out"/>
         <field name="binding_view_types">list,form</field>
-        <field name="view_id" ref="view_sdi_channel_tree" />
+        <!--<field name="view_id" ref="view_sdi_channel_tree" />-->
     </record>
 </odoo>
