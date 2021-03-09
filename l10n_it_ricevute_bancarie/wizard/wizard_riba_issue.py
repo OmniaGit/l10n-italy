@@ -146,7 +146,7 @@ class RibaIssue(models.TransientModel):
         )
         action_id = action and action[1] or False
         action = act_obj.browse(action_id)
-        action_vals = action.read()[0]
+        action_vals = action.sudo().read()[0]
         action_vals["views"] = [(view and view[1] or False, "form")]
         action_vals["res_id"] = rd_id
         return action_vals
