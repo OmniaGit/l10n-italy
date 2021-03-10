@@ -74,9 +74,7 @@ class FatturaAttachmentIn(models.Model):
         try:
             fatturapa_atts = self.search([('name', '=', file_name)])
             if fatturapa_atts:
-                logging.info(
-                    "Invoice xml already processed in %s"
-                    % fatturapa_atts.mapped('name'))
+                logging.info("Invoice xml already processed in %s" % str(fatturapa_atts.mapped('name')))
             else:
                 with open(file_path, 'rb') as f:
                     return self.create({'name': file_name,
@@ -91,5 +89,7 @@ class FatturaAttachmentIn(models.Model):
         out = self.env['fatturapa.attachment.in']
         for xml_file in Path(pa_in_folder).rglob("*.xml"):
             logging.info("Processing FatturaPA file: %r" % xml_file)
-            out+=self.create_fatturapa_from_file(xml_file)
+            tmp_out = self.create_fatturapa_from_file(xml_file)
+            if tmp_out:
+                out+= tmp_out
         return out  
