@@ -260,7 +260,7 @@ class EFatturaOut:
             # check value code
             code = self.partner_id.ipa_code
         else:
-            code = self.partner_id.codice_destinatario or "0000000"
+            code = self.partner_id.codice_destinatario
 
         # Create file content.
         template_values = {
@@ -301,8 +301,8 @@ class EFatturaOut:
         if not ok:
             # XXX - da migliorare?
             # i controlli precedenti dovrebbero escludere errori di sintassi XML
-            with open("/tmp/fatturaout.xml", "wb") as o:
-                o.write(etree.tostring(root, xml_declaration=True, encoding="utf-8"))
+            # with open("/tmp/fatturaout.xml", "wb") as o:
+            #    o.write(etree.tostring(root, xml_declaration=True, encoding="utf-8"))
             msg=''
             for invoice in self.invoices:
                 msg+= "Invoice: %s %s\n" % (invoice.name, invoice.partner_id.display_name)
