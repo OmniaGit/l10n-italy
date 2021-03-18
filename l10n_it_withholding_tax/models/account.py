@@ -50,7 +50,11 @@ class AccountPartialReconcile(models.Model):
         if vals.get("credit_move_id"):
             ml_ids.append(vals.get("credit_move_id"))
         move_lines = self.env["account.move.line"].browse(ml_ids)
-        invoice = move_lines.filtered(lambda x: x.exists()).move_id
+        for ml in move_lines:
+            domain = [("id", "=", ml.move_id.id)]
+            invoice = self.env["account.move"].search(domain)
+            if invoice:
+                break
         # invoice.ensure_one() XXX - should we do this?
         # Limit value of reconciliation
         if invoice and invoice.withholding_tax and invoice.amount_net_pay:
@@ -176,24 +180,22 @@ class AccountPartialReconcile(models.Model):
 class AccountAbstractPayment(models.Model):
     _inherit = "account.payment"
 
-    @api.model
-    def default_get(self, fields):
-        """
-        Compute amount to pay proportionally to amount total - wt
-        """
-        rec = super(AccountAbstractPayment, self).default_get(fields)
-        invoice_defaults = self.resolve_2many_commands(
-            "invoice_ids", rec.get("invoice_ids")
-        )
-        if invoice_defaults and len(invoice_defaults) == 1:
-            invoice = invoice_defaults[0]
-            if (
-                "withholding_tax_amount" in invoice
-                and invoice["withholding_tax_amount"]
-            ):
-                coeff_net = invoice["amount_residual"] / invoice["amount_total"]
-                rec["amount"] = invoice["amount_net_pay_residual"] * coeff_net
-        return rec
+    # @api.model
+    # def default_get(self, fields):
+        # """
+        # Compute amount to pay proportionally to amount total - wt
+        # """
+        # rec = super(AccountAbstractPayment, self).default_get(fields)
+        # invoice_defaults = self.new({"invoice_ids": rec.get("invoice_ids")}).invoice_ids
+        # if invoice_defaults and len(invoice_defaults) == 1:
+            # invoice = invoice_defaults[0]
+            # if (
+                # "withholding_tax_amount" in invoice
+                # and invoice["withholding_tax_amount"]
+            # ):
+                # coeff_net = invoice["amount_residual"] / invoice["amount_total"]
+                # rec["amount"] = invoice["amount_net_pay_residual"] * coeff_net
+        # return rec
 
     def _compute_payment_amount(self, invoices=None, currency=None):
         if not invoices:
