@@ -946,7 +946,7 @@ class WizardImportFatturapa(models.TransientModel):
 
         invoice._onchange_invoice_line_wt_ids()
         invoice._recompute_dynamic_lines()
-        invoice.write(invoice._convert_to_write(invoice._cache))
+        invoice.sudo().write(invoice._convert_to_write(invoice._cache))
 
         rel_docs_dict = {
             # 2.1.2
@@ -1445,6 +1445,7 @@ class WizardImportFatturapa(models.TransientModel):
                     product, invoice_line_data, invoice_lines, invoice_line_model
                 )
 
+        # self.env['account.move.line'].browse(invoice_lines).display_type = 'line_note'
         invoice.with_context(check_move_validity=False).update(
             {"invoice_line_ids": [(6, 0, invoice_lines)]}
         )
