@@ -265,7 +265,7 @@ class AccountMoveLine(models.Model):
         for line in self.filtered(lambda x : x.reconciled==True):
             msg.append(line.move_name)
         if msg:
-            raise UserError(_("You are trying to reconcile moves %s that has already reconciled.") % msg)
+            raise UserError(_("You are trying to reconcile moves %s that has already been reconciled.") % msg)
         res = super(AccountMoveLine, self).reconcile()
         for line in self:
             line.update_paid_riba_lines()
