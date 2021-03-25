@@ -4,7 +4,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
-
+from odoo.tools.float_utils import float_round
 
 class AccountFullReconcile(models.Model):
     _inherit = "account.full.reconcile"
