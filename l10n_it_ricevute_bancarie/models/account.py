@@ -260,6 +260,12 @@ class AccountMoveLine(models.Model):
                         riba_line.distinta_id.state = "paid"
 
     def reconcile(self):
+        # Pre check in order to have better message in case 
+        msg =[]
+        for line in self.filtered(lambda x : x.reconciled==True):
+            msg.append(line.move_name)
+        if msg:
+            raise UserError(_("You are trying to reconcile moves %s that has already reconciled.") % msg)
         res = super(AccountMoveLine, self).reconcile()
         for line in self:
             line.update_paid_riba_lines()
