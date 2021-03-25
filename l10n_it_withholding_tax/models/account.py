@@ -299,9 +299,7 @@ class AccountMove(models.Model):
     @api.depends(
         "invoice_line_ids.price_subtotal",
         "withholding_tax_line_ids.tax",
-        "currency_id",
-        "company_id",
-        "invoice_date",
+        "amount_total",
         # "payment_move_line_ids",
     )
     def _compute_amount_withholding_tax(self):
@@ -309,17 +307,21 @@ class AccountMove(models.Model):
         for invoice in self:
             withholding_tax_amount = 0.0
             for wt_line in invoice.withholding_tax_line_ids:
-                withholding_tax_amount += round(
+                withholding_tax_amount += float_round(
                     wt_line.tax, dp_obj.precision_get("Account")
                 )
             invoice.amount_net_pay = invoice.amount_total - withholding_tax_amount
-            # amount_net_pay_residual = invoice.amount_net_pay
+            amount_net_pay_residual = invoice.amount_net_pay
             invoice.withholding_tax_amount = withholding_tax_amount
-            # XXX da vedere
-            # for line in invoice.payment_move_line_ids:
-            #    if not line.withholding_tax_generated_by_move_id:
-            #        amount_net_pay_residual -= line.debit or line.credit
-            # invoice.amount_net_pay_residual = amount_net_pay_residual
+
+            reconciled_lines = invoice.line_ids.filtered(lambda line: line.account_id.user_type_id.type in ('receivable', 'payable'))
+            reconciled_amls = reconciled_lines.mapped('matched_debit_ids.debit_move_id') + \
+                              reconciled_lines.mapped('matched_credit_ids.credit_move_id')
+
+            for line in reconciled_amls:
+                if not line.withholding_tax_generated_by_move_id:
+                    amount_net_pay_residual -= line.debit or line.credit
+            invoice.amount_net_pay_residual = float_round(amount_net_pay_residual, dp_obj.precision_get("Account"))
 
     withholding_tax = fields.Boolean("Withholding Tax")
     withholding_tax_line_ids = fields.One2many(
@@ -352,21 +354,7 @@ class AccountMove(models.Model):
         readonly=True,
     )
 
-    @api.model
-    def create(self, vals):
-        invoice = super(AccountMove, self.with_context(mail_create_nolog=True)).create(
-            vals
-        )
-
-        if (
-            any(line.invoice_line_tax_wt_ids for line in invoice.invoice_line_ids)
-            and not invoice.withholding_tax_line_ids
-        ):
-            invoice.compute_taxes()
-
-        return invoice
-
-    @api.onchange("invoice_line_ids")
+    @api.onchange("line_ids")
     def _onchange_invoice_line_wt_ids(self):
         self.ensure_one()
         wt_taxes_grouped = self.get_wt_taxes_values()
@@ -421,7 +409,7 @@ class AccountMove(models.Model):
         for invoice in self:
             for line in invoice.invoice_line_ids:
                 taxes = []
-                for wt_tax in line.invoice_line_tax_wt_ids:
+                for wt_tax in line.invoice_line_tax_wt_ids.filtered(lambda x: x.id):
                     res = wt_tax.compute_tax(line.price_subtotal)
                     tax = {
                         "id": wt_tax.id,

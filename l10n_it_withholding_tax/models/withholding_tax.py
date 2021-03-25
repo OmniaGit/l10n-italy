@@ -16,6 +16,10 @@ class WithholdingTax(models.Model):
     )
     def _compute_get_rate(self):
         for wt in self:
+            wt.tax = 0
+            wt.base = 1
+            if not wt.id:
+                continue
             self.env.cr.execute(
                 """
                 SELECT tax, base FROM withholding_tax_rate
@@ -29,9 +33,6 @@ class WithholdingTax(models.Model):
             if rate:
                 wt.tax = rate[0]
                 wt.base = rate[1]
-            else:
-                wt.tax = 0
-                wt.base = 1
 
     def _default_wt_journal(self):
         misc_journal = self.env["account.journal"].search([("code", "=", _("MISC"))])
@@ -143,30 +144,30 @@ class WithholdingTaxRate(models.Model):
 
     @api.constrains("date_start", "date_stop")
     def _check_date(self):
-        self.ensure_one()
-        if self.withholding_tax_id.active:
+        for rate in self:
+            if rate.withholding_tax_id.active:
             domain = [
-                ("withholding_tax_id", "=", self.withholding_tax_id.id),
-                ("id", "!=", self.id),
+                    ("withholding_tax_id", "=", rate.withholding_tax_id.id),
+                    ("id", "!=", rate.id),
             ]
-            if self.date_start:
+                if rate.date_start:
                 domain.extend(
                     [
                         "|",
-                        ("date_stop", ">=", self.date_start),
+                            ("date_stop", ">=", rate.date_start),
                         ("date_stop", "=", False),
                     ]
                 )
-            if self.date_stop:
+                if rate.date_stop:
                 domain.extend(
                     [
                         "|",
-                        ("date_start", "<=", self.date_stop),
+                            ("date_start", "<=", rate.date_stop),
                         ("date_start", "=", False),
                     ]
                 )
 
-            overlapping_rate = self.env["withholding.tax.rate"].search(domain, limit=1)
+                overlapping_rate = rate.env["withholding.tax.rate"].search(domain, limit=1)
             if overlapping_rate:
                 raise ValidationError(_("Error! You cannot have 2 rates that overlap!"))
 

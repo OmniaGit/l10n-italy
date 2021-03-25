@@ -32,12 +32,11 @@
                     />
                 </xpath>
 
-<!--
-                <xpath expr="//page//tree//field[@name='tax_ids']" position="after">
+                <xpath expr="//field[@name='narration']" position="before">
                     <field
-                    name="withholding_tax_line_ids"
-                    attrs="{'invisible': [('withholding_tax', '=', False)]}"
-                >
+                        name="withholding_tax_line_ids"
+                        attrs="{'invisible': [('withholding_tax', '=', False)]}"
+                    >
                         <tree>
                             <field name="withholding_tax_id" />
                             <field name="base" />
@@ -60,7 +59,6 @@
                     </field>
                 </xpath>
 
--->
                 <xpath
                     expr="//group[hasclass('oe_subtotal_footer', 'oe_right')]/field[@name='amount_total']"
                     position="after"

@@ -126,7 +126,10 @@ class EFatturaOut:
             if uom_precision < 2:
                 uom_precision = 2
 
-            quantity = line.quantity + 0
+            if not line.quantity or line.display_type in ("line_section", "line_note"):
+                quantity = 0
+            else:
+                quantity = line.quantity
 
             # lo SdI non accetta quantità negative, quindi invertiamo price_unit
             # e quantity (vd. format_price)

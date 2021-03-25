@@ -222,24 +222,35 @@ class RibaListLine(models.Model):
                 line.amount += move_line.amount
                 if move_line.move_line_id.move_id.invoice_date:
                     if not line.invoice_date:
-                        line.invoice_date = str(fields.Date.from_string(
-                                move_line.move_line_id.move_id.invoice_date
-                        ).strftime("%d/%m/%Y"))
-                    else:
-                        line.invoice_date = "%s, %s" % (
-                            line.invoice_date, str(fields.Date.from_string(
+                        line.invoice_date = str(
+                            fields.Date.from_string(
                                     move_line.move_line_id.move_id.invoice_date
-                            ).strftime("%d/%m/%Y")))
+                            ).strftime("%d/%m/%Y")
+                        )
+                    else:
+                        line.invoice_date = "{}, {}".format(
+                            line.invoice_date,
+                            str(
+                                fields.Date.from_string(
+                                        move_line.move_line_id.move_id.invoice_date
+                                ).strftime("%d/%m/%Y")
+                            ),
+                        )
                 if not line.invoice_number:
                     line.invoice_number = str(
-                        move_line.move_line_id.move_id.move_id.name if
-                        move_line.move_line_id.move_id.display_name == '/' else
-                        move_line.move_line_id.move_id.display_name)
+                        move_line.move_line_id.move_id.move_id.name
+                        if move_line.move_line_id.move_id.display_name == "/"
+                        else move_line.move_line_id.move_id.display_name
+                    )
                 else:
-                    line.invoice_number = "%s, %s" % (line.invoice_number, str(
-                        move_line.move_line_id.move_id.move_id.name if
-                        move_line.move_line_id.move_id.display_name == '/' else
-                        move_line.move_line_id.move_id.display_name))
+                    line.invoice_number = "{}, {}".format(
+                        line.invoice_number,
+                        str(
+                            move_line.move_line_id.move_id.move_id.name
+                            if move_line.move_line_id.move_id.display_name == "/"
+                            else move_line.move_line_id.move_id.display_name
+                        ),
+                    )
 
     amount = fields.Float(compute="_compute_line_values", string="Amount")
     invoice_date = fields.Char(
@@ -503,4 +514,5 @@ class RibaListMoveLine(models.Model):
     amount = fields.Float("Amount", digits="Account")
     move_line_id = fields.Many2one("account.move.line", string="Credit Move Line")
     riba_line_id = fields.Many2one(
-        'riba.distinta.line', string='Slip Line', ondelete='cascade')
+        "riba.distinta.line", string="Slip Line", ondelete="cascade"
+    )
