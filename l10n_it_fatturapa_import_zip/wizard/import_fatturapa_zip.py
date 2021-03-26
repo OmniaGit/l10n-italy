@@ -21,8 +21,7 @@ class ImportFatturaPaZip(models.Model):
         )
         with ZipFile(BytesIO(base64.b64decode(self.data)), "r") as f:
             f.extractall(whereToExtract)
-        imported_ids = self.env
-        ["fatturapa.attachment.in"].get_xml_customer_invoice(whereToExtract)
+        imported_ids = self.env["fatturapa.attachment.in"].get_xml_customer_invoice(whereToExtract)
         return {
             "type": "ir.actions.act_window",
             "name": "Imported Invoice",
