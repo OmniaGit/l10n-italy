@@ -122,7 +122,7 @@ class ResPartner(models.Model):
                     and len(partner.codice_destinatario) != 7
                 ):
                     raise ValidationError(
-                        _("Partner %s Addressee Code " "must be 7 characters long.")
+                        _("Partner %s Addressee Code must be 7 characters long.")
                         % partner.name
                     )
                 if partner.pec_destinatario:
@@ -144,7 +144,7 @@ class ResPartner(models.Model):
                     and partner.country_id.code == "IT"
                 ):
                     raise ValidationError(
-                        _("Italian partner %s must " "have VAT Number or Fiscal Code.")
+                        _("Italian partner %s must have VAT Number or Fiscal Code.")
                         % partner.name
                     )
                 if not partner.street:
@@ -164,7 +164,7 @@ class ResPartner(models.Model):
                     )
                 if not partner.country_id:
                     raise ValidationError(
-                        _("Customer %s: country is needed for XML" " generation.")
+                        _("Customer %s: country is needed for XML generation.")
                         % partner.name
                     )
 
@@ -179,6 +179,10 @@ class ResPartner(models.Model):
     def onchange_electronic_invoice_subjected(self):
         if not self.electronic_invoice_subjected:
             self.electronic_invoice_obliged_subject = False
+        else:
+            if self.supplier_rank > 0:
+                self.onchange_country_id_e_inv()
+                self.electronic_invoice_obliged_subject = True
 
     @api.onchange("electronic_invoice_obliged_subject")
     def onchange_e_inv_obliged_subject(self):

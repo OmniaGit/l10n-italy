@@ -11,15 +11,6 @@ RELATED_DOCUMENT_TYPES = {
 }
 
 
-class FatturapaFormat(models.Model):
-    # _position = ['1.1.3']
-    _name = "fatturapa.format"
-    _description = "E-invoice Format"
-
-    name = fields.Char("Description", size=128)
-    code = fields.Char("Code", size=5)
-
-
 #  used in fatturaPa import
 class FatturapaPaymentData(models.Model):
     # _position = ['2.4.2.2']
@@ -461,5 +452,5 @@ class AccountInvoice(models.Model):
             "view_mode": "form",
             "res_model": self._name,
             "res_id": self.id,
-            "taget": "current",
+            "target": "current",
         }

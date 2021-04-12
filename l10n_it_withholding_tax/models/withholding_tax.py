@@ -147,14 +147,14 @@ class WithholdingTaxRate(models.Model):
         for rate in self:
             if rate.withholding_tax_id.active:
                 domain = [
-                        ("withholding_tax_id", "=", rate.withholding_tax_id.id),
-                        ("id", "!=", rate.id),
+                    ("withholding_tax_id", "=", rate.withholding_tax_id.id),
+                    ("id", "!=", rate.id),
                 ]
                 if rate.date_start:
                     domain.extend(
                         [
                             "|",
-                                ("date_stop", ">=", rate.date_start),
+                            ("date_stop", ">=", rate.date_start),
                             ("date_stop", "=", False),
                         ]
                     )
@@ -162,14 +162,14 @@ class WithholdingTaxRate(models.Model):
                     domain.extend(
                         [
                             "|",
-                                ("date_start", "<=", rate.date_stop),
+                            ("date_start", "<=", rate.date_stop),
                             ("date_start", "=", False),
                         ]
                     )
 
                 overlapping_rate = rate.env["withholding.tax.rate"].search(domain, limit=1)
-            if overlapping_rate:
-                raise ValidationError(_("Error! You cannot have 2 rates that overlap!"))
+                if overlapping_rate:
+                    raise ValidationError(_("Error! You cannot have 2 rates that overlap!"))
 
     withholding_tax_id = fields.Many2one(
         "withholding.tax", string="Withholding Tax", ondelete="cascade", readonly=True

@@ -6,13 +6,13 @@
 
 {
     "name": "ITA - Fattura elettronica - Emissione",
-    "version": "14.0.2.0.0",
+    "version": "14.0.1.0.0",
     "development_status": "Beta",
     "category": "Localization/Italy",
     "summary": "Emissione fatture elettroniche",
     "author": "Davide Corio, Agile Business Group, Innoviu,"
     "Odoo Community Association (OCA)",
-    "website": "https://github.com/OCA/l10n-italy" "l10n_it_fatturapa_out",
+    "website": "https://github.com/OCA/l10n-italy",
     "license": "AGPL-3",
     "depends": [
         "l10n_it_account",

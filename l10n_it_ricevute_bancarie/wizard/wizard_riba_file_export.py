@@ -77,7 +77,7 @@ class RibaFileExport(models.TransientModel):
 
     #     @classmethod
     #     def _build_model_attributes(cls, pool):
-#         """ Initialize base model attributes. """
+    #         """ Initialize base model attributes. """
     #         ret = super(RibaFileExport,cls)._build_model_attributes( pool)
     #         cls.progressivo = 0
     #         cls.assuntrice = 0

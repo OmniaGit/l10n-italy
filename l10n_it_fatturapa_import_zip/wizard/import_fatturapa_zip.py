@@ -12,16 +12,17 @@ from odoo import fields, models
 
 class ImportFatturaPaZip(models.Model):
     _name = "import.fatturepa_zip"
-    
+
     data = fields.Binary("File")
-    
+
     def ImportIN(self):
         whereToExtract = os.path.join(
             "/tmp", "IN_%s" % datetime.datetime.now().strftime("%Y%m%d%H%M")
         )
         with ZipFile(BytesIO(base64.b64decode(self.data)), "r") as f:
             f.extractall(whereToExtract)
-        imported_ids = self.env["fatturapa.attachment.in"].get_xml_customer_invoice(whereToExtract)
+        imported_ids = self.env
+        ["fatturapa.attachment.in"].get_xml_customer_invoice(whereToExtract)
         return {
             "type": "ir.actions.act_window",
             "name": "Imported Invoice",
@@ -29,8 +30,4 @@ class ImportFatturaPaZip(models.Model):
             "view_mode": "list,form",
             "view_type": "list",
             "domain": [("id", "in", imported_ids.ids)],
-        }  
-        
-        
-
-    
+        }

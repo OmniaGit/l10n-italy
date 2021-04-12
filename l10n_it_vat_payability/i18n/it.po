@@ -39,23 +39,23 @@ msgstr ""
 msgid "Tax"
 msgstr "Imposta"
 
-#. module: l10n_it_esigibilita_iva
-#: model:ir.model.fields,field_description:l10n_it_esigibilita_iva.field_account_tax__payability
+#. module: l10n_it_vat_payability
+#: model:ir.model.fields,field_description:l10n_it_vat_payability.field_account_tax__payability
 msgid "VAT payability"
 msgstr "Esigibilità IVA"
 
-#. module: l10n_it_esigibilita_iva
-#: selection:account.tax,payability:0
+#. module: l10n_it_vat_payability
+#: model:ir.model.fields.selection,name:l10n_it_vat_payability.selection__account_tax__payability__i
 msgid "VAT payable immediately"
 msgstr "IVA esigibile immediatamente"
 
-#. module: l10n_it_esigibilita_iva
-#: selection:account.tax,payability:0
+#. module: l10n_it_vat_payability
+#: model:ir.model.fields.selection,name:l10n_it_vat_payability.selection__account_tax__payability__s
 msgid "split payments"
 msgstr "scissione pagamenti"
 
-#. module: l10n_it_esigibilita_iva
-#: selection:account.tax,payability:0
+#. module: l10n_it_vat_payability
+#: model:ir.model.fields.selection,name:l10n_it_vat_payability.selection__account_tax__payability__d
 msgid "unrealized VAT"
 msgstr "IVA differita"
 
