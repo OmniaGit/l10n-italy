@@ -111,7 +111,8 @@ class RibaList(models.Model):
         "account.move", "Credit Entry", readonly=True
     )
     payment_ids = fields.Many2many(
-        'account.move.line', compute='_compute_payment_ids', string='Payments')
+        "account.move.line", compute="_compute_payment_ids", string="Payments"
+    )
     unsolved_move_ids = fields.Many2many(
         "account.move", compute="_compute_unsolved_move_ids", string="Past Due Entries"
     )
@@ -220,22 +221,21 @@ class RibaListLine(models.Model):
             line.invoice_number = ""
             for move_line in line.move_line_ids:
                 line.amount += move_line.amount
-                if move_line.move_line_id.move_id.invoice_date:
-                    if not line.invoice_date:
-                        line.invoice_date = str(
+                if not line.invoice_date:
+                    line.invoice_date = str(
+                        fields.Date.from_string(
+                            move_line.move_line_id.move_id.invoice_date
+                        ).strftime("%d/%m/%Y")
+                    )
+                else:
+                    line.invoice_date = "{}, {}".format(
+                        line.invoice_date,
+                        str(
                             fields.Date.from_string(
-                                    move_line.move_line_id.move_id.invoice_date
+                                move_line.move_line_id.move_id.invoice_date
                             ).strftime("%d/%m/%Y")
-                        )
-                    else:
-                        line.invoice_date = "{}, {}".format(
-                            line.invoice_date,
-                            str(
-                                fields.Date.from_string(
-                                        move_line.move_line_id.move_id.invoice_date
-                                ).strftime("%d/%m/%Y")
-                            ),
-                        )
+                        ),
+                    )
                 if not line.invoice_number:
                     line.invoice_number = str(
                         move_line.move_line_id.move_id.move_id.name

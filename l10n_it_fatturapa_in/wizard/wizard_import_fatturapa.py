@@ -1002,7 +1002,8 @@ class WizardImportFatturapa(models.TransientModel):
             self.set_roundings(FatturaBody, invoice)
 
         # compute the invoice
-        invoice._move_autocomplete_invoice_lines_values()
+        invoice.with_context(
+            check_move_validity=False)._move_autocomplete_invoice_lines_values()
 
         self.set_vendor_bill_data(FatturaBody, invoice)
 
@@ -1127,7 +1128,7 @@ class WizardImportFatturapa(models.TransientModel):
             if not arrotondamenti_tax_id:
                 self.log_inconsistency(_("Round up and down tax is not set"))
 
-            line_sequence = max(invoice.invoice_line_ids.mapped("sequence"))
+            line_sequence = max(invoice.invoice_line_ids.mapped("sequence"), default=1)
             line_vals = []
             for summary in FatturaBody.DatiBeniServizi.DatiRiepilogo:
                 # XXX fallisce cattivo se non trova l'imposta Arrotondamento
@@ -1235,7 +1236,7 @@ class WizardImportFatturapa(models.TransientModel):
         wt_founds = []
         for Withholding in Withholdings:
             wts = self.env["withholding.tax"].search(
-                [("causale_pagamento_id.code", "=", Withholding.CausalePagamento)]
+                [("payment_reason_id.code", "=", Withholding.CausalePagamento)]
             )
             if not wts:
                 raise UserError(
