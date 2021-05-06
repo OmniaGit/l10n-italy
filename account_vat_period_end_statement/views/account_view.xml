@@ -157,12 +157,16 @@
                                     attrs="{'required':[('tax_credit_amount','!=',0)]}"
                                 />
                                 <field name="tax_credit_amount" nolabel="1" />
-                                <separator colspan="3" string="Down payment due" />
+                                <separator colspan="3" string="Down payment" />
                                 <field
                                     name="advance_account_id"
                                     attrs="{'required':[('advance_amount','!=',0)]}"
                                 />
                                 <field name="advance_amount" nolabel="1" />
+                                <field
+                                    name="advance_computation_method"
+                                    string="Computation method"
+                                />
                             </group>
                             <separator
                                 colspan="3"

@@ -377,31 +377,41 @@ class RibaListLine(models.Model):
             to_be_reconciled = self.env["account.move.line"]
             riba_move_line_name = ""
             for riba_move_line in line.move_line_ids:
-                if str(riba_move_line.move_line_id.move_id.sequence_number) and str(riba_move_line.move_line_id.move_id.sequence_number) not in riba_move_line_name:
-                    riba_move_line_name = ' '.join([
-                        riba_move_line_name,
-                        str(riba_move_line.move_line_id.move_id.sequence_number)
-                    ]).lstrip()
-                elif riba_move_line.move_line_id.name and riba_move_line.move_line_id.name not in riba_move_line_name:
-                    riba_move_line_name = ' '.join([
-                        riba_move_line_name, riba_move_line.move_line_id.name
-                    ]).lstrip()
-                    
-                move_line_vals = {'name': (riba_move_line.move_line_id.move_id and
-                                           riba_move_line.move_line_id.move_id.sequence_number or
-                                           riba_move_line.move_line_id.name),
-                                  'partner_id': line.partner_id.id,
-                                  'account_id': (riba_move_line.move_line_id.account_id.id),
-                                  'move_id': move.id} 
-                amount = riba_move_line.amount
-                total_credit += amount
-                if amount > 0:
-                    move_line_vals['credit'] =  amount
-                    move_line_vals['debit'] = 0.0
-                else:
-                    move_line_vals['credit'] = 0.0
-                    move_line_vals['debit'] = abs(amount)         
-                move_line = move_line_model.with_context({'check_move_validity': False}).create(move_line_vals)
+                total_credit += riba_move_line.amount
+                if (
+                    str(riba_move_line.move_line_id.move_id.sequence_number)
+                    and str(riba_move_line.move_line_id.move_id.sequence_number)
+                    not in riba_move_line_name
+                ):
+                    riba_move_line_name = " ".join(
+                        [
+                            riba_move_line_name,
+                            str(riba_move_line.move_line_id.move_id.sequence_number),
+                        ]
+                    ).lstrip()
+                elif (
+                    riba_move_line.move_line_id.name
+                    and riba_move_line.move_line_id.name not in riba_move_line_name
+                ):
+                    riba_move_line_name = " ".join(
+                        [riba_move_line_name, riba_move_line.move_line_id.name]
+                    ).lstrip()
+                move_line = move_line_model.with_context(
+                    {"check_move_validity": False}
+                ).create(
+                    {
+                        "name": (
+                            riba_move_line.move_line_id.move_id
+                            and riba_move_line.move_line_id.move_id.sequence_number
+                            or riba_move_line.move_line_id.name
+                        ),
+                        "partner_id": line.partner_id.id,
+                        "account_id": (riba_move_line.move_line_id.account_id.id),
+                        "credit": riba_move_line.amount,
+                        "debit": 0.0,
+                        "move_id": move.id,
+                    }
+                )
                 to_be_reconciled |= move_line
                 to_be_reconciled |= riba_move_line.move_line_id
             values = {

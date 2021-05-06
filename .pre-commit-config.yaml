@@ -21,7 +21,11 @@ exclude: |
   (l10n_it_fatturapa/data/FoglioStileAssoSoftware_v1.1.xsl)|
   # XML tests should not be reformatted
   ^l10n_it_fatturapa_out/tests/data|
+<<<<<<< HEAD
   ^l10n_it_fatturapa_out_sp/tests/data|
+=======
+  ^l10n_it_fatturapa_out_sp/tests/data
+>>>>>>> branch '14.0-supermerge' of https://github.com/odoo-italia/l10n-italy.git
   ^l10n_it_fatturapa_in/tests/data
 default_language_version:
   python: python3

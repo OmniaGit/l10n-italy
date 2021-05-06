@@ -3,7 +3,7 @@
 # Copyright 2016  Alessio Gerace - Agile Business Group
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import _, api, fields, models
+from odoo import _, fields, models
 from odoo.exceptions import UserError
 
 
@@ -27,13 +27,6 @@ class AccountMove(models.Model):
         string="Is Split Payment", related="fiscal_position_id.split_payment"
     )
 
-    @api.depends(
-        "invoice_line_ids.price_subtotal",
-        "currency_id",
-        "company_id",
-        "invoice_date",
-        "move_type",
-    )
     def _compute_amount(self):
         super(AccountMove, self)._compute_amount()
         for move in self:
@@ -80,11 +73,11 @@ class AccountMove(models.Model):
         and set correct receivable lines
         """
         self._recompute_dynamic_lines()
+        line_client_ids = self.line_ids.filtered(
+            lambda l: l.account_id.id
+            == self.partner_id.property_account_receivable_id.id
+        )
         if self.move_type == "out_invoice":
-            line_client_ids = self.line_ids.filtered(
-                lambda l: l.account_id.id
-                == self.partner_id.property_account_receivable_id.id
-            )
             for line_client in line_client_ids:
                 inv_total = self.amount_sp + self.amount_total
                 if inv_total:
@@ -97,10 +90,6 @@ class AccountMove(models.Model):
                     {"debit": receivable_line_amount}
                 )
         elif self.move_type == "out_refund":
-            line_client_ids = self.line_ids.filtered(
-                lambda l: l.account_id.id
-                == self.partner_id.property_account_receivable_id.id
-            )
             for line_client in line_client_ids:
                 inv_total = self.amount_sp + self.amount_total
                 if inv_total:
@@ -113,6 +102,7 @@ class AccountMove(models.Model):
                     {"credit": receivable_line_amount}
                 )
 
+                
     def _compute_split_payments(self):
         write_off_line_vals = self._build_debit_line()
         line_sp = self.line_ids.filtered(

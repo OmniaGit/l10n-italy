@@ -255,8 +255,9 @@ class TestTax(TransactionCase):
             }
         )
         self.current_period.vat_statement_id = self.vat_statement
-        self.account_tax_22._compute_balance()
+        self.account_tax_22.refresh()
         self.vat_statement.compute_amounts()
+        self.vat_statement._compute_authority_vat_amount()
         self.vat_statement.previous_credit_vat_account_id = self.received_vat_account
 
         self.assertEqual(self.vat_statement.previous_credit_vat_amount, 11)
@@ -268,7 +269,7 @@ class TestTax(TransactionCase):
         self.assertEqual(len(self.vat_statement.credit_vat_account_line_ids), 1)
         self.vat_statement.advance_account_id = self.paid_vat_account
         self.vat_statement.advance_amount = 100
-        self.vat_statement.refresh()
+        self.vat_statement._compute_authority_vat_amount()
         self.assertEqual(self.vat_statement.authority_vat_amount, -100)
         self.vat_statement.create_move()
         self.assertEqual(self.vat_statement.state, "confirmed")

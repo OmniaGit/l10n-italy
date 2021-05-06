@@ -216,6 +216,20 @@ class AccountVatPeriodEndStatement(models.Model):
         },
         digits="Account",
     )
+    advance_computation_method = fields.Selection(
+        [
+            ("1", "Storico"),
+            ("2", "Previsionale"),
+            ("3", "Analitico - effettivo"),
+            ("4", '"4" (soggetti particolari)'),
+        ],
+        string="Down payment computation method",
+        states={
+            "confirmed": [("readonly", True)],
+            "paid": [("readonly", True)],
+            "draft": [("readonly", False)],
+        },
+    )
     generic_vat_account_line_ids = fields.One2many(
         "statement.generic.account.line",
         "statement_id",
@@ -359,7 +373,7 @@ class AccountVatPeriodEndStatement(models.Model):
         for statement in self:
             if statement.move_id:
                 statement.move_id.button_cancel()
-                statement.move_id.unlink()
+                statement.move_id.with_context(force_delete=True).unlink()
             statement.state = "draft"
 
     def statement_paid(self):

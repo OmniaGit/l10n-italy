@@ -10,8 +10,8 @@
     "category": "Localization/Italy",
     "summary": "Allow to create the 'VAT Statement'.",
     "license": "AGPL-3",
-    "author": "Agile Business Group, Odoo Community Association (OCA)" ", LinkIt Spa",
-    "website": "https://github.com/OCA/l10n-italy" "account_vat_period_end_statement",
+    "author": "Agile Business Group, Odoo Community Association (OCA), LinkIt Spa",
+    "website": "https://github.com/OCA/l10n-italy",
     "depends": [
         "account",
         "account_tax_balance",
