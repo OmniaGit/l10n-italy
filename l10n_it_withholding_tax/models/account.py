@@ -50,7 +50,11 @@ class AccountPartialReconcile(models.Model):
         if vals.get("credit_move_id"):
             ml_ids.append(vals.get("credit_move_id"))
         move_lines = self.env["account.move.line"].browse(ml_ids)
-        invoice = move_lines.filtered(lambda x: x.exists()).move_id
+        for ml in move_lines:
+            domain = [("id", "=", ml.move_id.id)]
+            invoice = self.env["account.move"].search(domain)
+            if invoice:
+                break
         # invoice.ensure_one() XXX - should we do this?
         # Limit value of reconciliation
         if invoice and invoice.withholding_tax and invoice.amount_net_pay:
