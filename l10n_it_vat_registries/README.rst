@@ -42,7 +42,7 @@ Configuration
 impostando il campo dell'imposta 'Escludere dai registri IVA'
 
 Per generare i periodi fiscali,
-aprire Impostazioni > Funzioni tecniche > Intervalli data > Generazione intervalli data (visibile solo in modalità debug):
+aprire Contabilità > Configurazione > Contabilità > Intervalli data > Generazione intervalli data:
 
 * Prefisso nome intervallo: prefisso identificativo dell'anno dei periodi da generare
 * Durata: 1 mese
@@ -66,7 +66,7 @@ You can configure which taxes to exclude from registries (like withholding tax)
 setting the 'Exclude from VAT registries' field.
 
 In order to generate fiscal periods,
-open Settings > Technical > Date ranges > Generate Date Ranges (visible only in debug mode):
+open Accounting > Configuration > Accounting > Date ranges > Generate Date Ranges:
 
 * Range name prefix: Prefix identifying the year of the periods to be generated
 * Duration: 1 month
