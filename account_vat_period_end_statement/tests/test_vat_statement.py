@@ -274,5 +274,10 @@ class TestTax(TransactionCase):
         self.vat_statement.create_move()
         self.assertEqual(self.vat_statement.state, "confirmed")
         self.assertTrue(self.vat_statement.move_id)
-        self.assertEqual(self.vat_statement.move_id.amount_total, 122)
+        vat_auth_found = False
+        for line in self.vat_statement.move_id.line_ids:
+            if line.account_id.id == self.vat_statement.authority_vat_account_id.id:
+                vat_auth_found = True
+                self.assertEqual(line.debit, 100)
+        self.assertTrue(vat_auth_found)
         # TODO payment

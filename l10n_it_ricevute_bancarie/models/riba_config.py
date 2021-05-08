@@ -41,9 +41,7 @@ class RibaConfiguration(models.Model):
         "res.company",
         "Company",
         required=True,
-        default=lambda self: self.env["res.company"]._company_default_get(
-            "riba.configuration"
-        ),
+        default=lambda self: self.env.company,
     )
     accreditation_journal_id = fields.Many2one(
         "account.journal",

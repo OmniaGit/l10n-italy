@@ -6,7 +6,7 @@
 
 {
     "name": "ITA - Fattura elettronica - Ricezione",
-    "version": "14.0.2.1.3",
+    "version": "14.0.1.0.0",
     "development_status": "Beta",
     "category": "Localization/Italy",
     "summary": "Ricezione fatture elettroniche",
@@ -15,7 +15,9 @@
     "license": "AGPL-3",
     "depends": [
         "l10n_it_fatturapa",
+        "l10n_it_fiscal_document_type",
         "l10n_it_withholding_tax_reason",
+        "l10n_it_fiscal_document_type",
     ],
     "data": [
         "views/account_view.xml",

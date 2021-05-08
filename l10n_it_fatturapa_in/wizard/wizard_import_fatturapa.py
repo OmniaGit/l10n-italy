@@ -78,14 +78,9 @@ class WizardImportFatturapa(models.TransientModel):
         if inconsistencies:
             inconsistencies += "\n"
         inconsistencies += message
-        # we can't set
-        # self = self.with_context(inconsistencies=inconsistencies)
-        # because self is a locale variable.
-        # We use __dict__ to modify attributes of self
-        # self.__dict__.update(
-        #    self.with_context(inconsistencies=inconsistencies).__dict__
-        # )
-        # XXX - da controllare
+        # convert to dict in order to be able to modify context
+        self.env.context = dict(self.env.context)
+        self.env.context.update(inconsistencies=inconsistencies)
 
     def check_partner_base_data(self, partner_id, DatiAnagrafici):
         partner = self.env["res.partner"].browse(partner_id)
@@ -496,6 +491,7 @@ class WizardImportFatturapa(models.TransientModel):
                 "sequence": int(line.NumeroLinea),
                 "account_id": credit_account_id,
                 "price_unit": float(line.PrezzoUnitario),
+                "exclude_from_invoice_tab": False,
             }
         )
         if line.Quantita is None:
@@ -668,7 +664,7 @@ class WizardImportFatturapa(models.TransientModel):
             ).create(line_vals)
         return True
 
-    def _createPaymentsLine(self, payment_id, line, partner_id):
+    def _createPaymentsLine(self, payment_id, line, partner_id, invoice):
         details = line.DettaglioPagamento or False
         if details:
             PaymentModel = self.env["fatturapa.payment.detail"]
@@ -735,8 +731,9 @@ class WizardImportFatturapa(models.TransientModel):
                     else:
                         bank = banks[0]
                 if dline.IBAN:
+                    iban = dline.IBAN.strip()
                     SearchDom = [
-                        ("acc_number", "=", pretty_iban(dline.IBAN.strip())),
+                        ("acc_number", "=", pretty_iban(iban)),
                         ("partner_id", "=", partner_id),
                     ]
                     payment_bank_id = False
@@ -750,20 +747,31 @@ class WizardImportFatturapa(models.TransientModel):
                                 "Bank Name: %s\n"
                             )
                             % (
-                                dline.IBAN.strip() or "",
+                                iban or "",
                                 dline.IstitutoFinanziario or "",
                             )
                         )
                     elif not payment_banks and bank:
-                        payment_bank_id = PartnerBankModel.create(
-                            {
-                                "acc_number": dline.IBAN.strip(),
-                                "partner_id": partner_id,
-                                "bank_id": bank.id,
-                                "bank_name": dline.IstitutoFinanziario or bank.name,
-                                "bank_bic": dline.BIC or bank.bic,
-                            }
-                        ).id
+                        existing_account = PartnerBankModel.search(
+                            [
+                                ("acc_number", "=", iban),
+                                ("company_id", "=", invoice.company_id.id),
+                            ]
+                        )
+                        if existing_account:
+                            self.log_inconsistency(
+                                _("Bank account %s already exists") % iban
+                            )
+                        else:
+                            payment_bank_id = PartnerBankModel.create(
+                                {
+                                    "acc_number": iban,
+                                    "partner_id": partner_id,
+                                    "bank_id": bank.id,
+                                    "bank_name": dline.IstitutoFinanziario or bank.name,
+                                    "bank_bic": dline.BIC or bank.bic,
+                                }
+                            ).id
                     if payment_banks:
                         payment_bank_id = payment_banks[0].id
 
@@ -923,9 +931,6 @@ class WizardImportFatturapa(models.TransientModel):
             "narration": comment,
         }
 
-        # 2.1.1.10
-        self.set_efatt_rounding(FatturaBody, invoice_data)
-
         # 2.1.1.12
         self.set_art73(FatturaBody, invoice_data)
 
@@ -936,17 +941,29 @@ class WizardImportFatturapa(models.TransientModel):
 
         invoice = invoice_model.create(invoice_data)
 
+        invoice_lines = []
         # 2.2.1
-        self.set_invoice_line_ids(
-            FatturaBody, credit_account_id, partner, wt_founds, invoice
+        invoice_lines.extend(
+            self.set_invoice_line_ids(
+                FatturaBody, credit_account_id, partner, wt_founds, invoice
+            )
         )
 
         # 2.1.1.7
-        self.set_welfares_fund(FatturaBody, credit_account_id, invoice, wt_founds)
+        invoice_lines.extend(
+            self.set_welfares_fund(FatturaBody, credit_account_id, invoice, wt_founds)
+        )
+
+        # 2.1.1.10
+        invoice_lines.extend(self.set_efatt_rounding(FatturaBody, invoice))
+
+        invoice.with_context(check_move_validity=False).update(
+            {"invoice_line_ids": [(6, 0, invoice_lines)]}
+        )
 
         invoice._onchange_invoice_line_wt_ids()
         invoice._recompute_dynamic_lines()
-        invoice.sudo().write(invoice._convert_to_write(invoice._cache))
+        invoice.write(invoice._convert_to_write(invoice._cache))
 
         rel_docs_dict = {
             # 2.1.2
@@ -1003,7 +1020,8 @@ class WizardImportFatturapa(models.TransientModel):
 
         # compute the invoice
         invoice.with_context(
-            check_move_validity=False)._move_autocomplete_invoice_lines_values()
+            check_move_validity=False
+        )._move_autocomplete_invoice_lines_values()
 
         self.set_vendor_bill_data(FatturaBody, invoice)
 
@@ -1028,9 +1046,9 @@ class WizardImportFatturapa(models.TransientModel):
             ).sorted(lambda line: line.date_maturity or today)
             if x:
                 x[-1].name = FatturaBody.DatiGenerali.DatiGeneraliDocumento.Numero
-                invoice.payment_reference = (
-                    FatturaBody.DatiGenerali.DatiGeneraliDocumento.Numero
-                )
+            invoice.payment_reference = (
+                FatturaBody.DatiGenerali.DatiGeneraliDocumento.Numero
+            )
 
     def set_parent_invoice_data(self, FatturaBody, invoice):
         ParentInvoice = FatturaBody.DatiGenerali.FatturaPrincipale
@@ -1139,7 +1157,7 @@ class WizardImportFatturapa(models.TransientModel):
                     )
                     arrotondamenti_account_id = (
                         arrotondamenti_passivi_account_id.id
-                        if to_round < 0.0
+                        if to_round > 0.0
                         else arrotondamenti_attivi_account_id.id
                     )
                     invoice_line_tax_id = (
@@ -1154,8 +1172,8 @@ class WizardImportFatturapa(models.TransientModel):
                         "move_id": invoice.id,
                         "name": name,
                         "account_id": arrotondamenti_account_id,
-                        "price_unit": abs(to_round),
-                        "exclude_from_invoice_tab": True,
+                        "price_unit": to_round,
+                        "exclude_from_invoice_tab": False,
                         "tax_ids": [(6, 0, [invoice_line_tax_id])],
                     }
                     # Valutare se in caso di importazione senza rounding sia meglio
@@ -1171,11 +1189,44 @@ class WizardImportFatturapa(models.TransientModel):
                     check_move_validity=False
                 ).create(line_vals)
 
-    def set_efatt_rounding(self, FatturaBody, invoice_data):
+    def set_efatt_rounding(self, FatturaBody, invoice):
+        invoice_line_model = self.env["account.move.line"]
+        invoice_line_ids = []
         if FatturaBody.DatiGenerali.DatiGeneraliDocumento.Arrotondamento:
-            invoice_data["efatt_rounding"] = float(
+            invoice.efatt_rounding = float(
                 FatturaBody.DatiGenerali.DatiGeneraliDocumento.Arrotondamento
             )
+            if invoice.efatt_rounding != 0:
+                if invoice.efatt_rounding > 0:
+                    arrotondamenti_account_id = (
+                        self.env.user.company_id.arrotondamenti_passivi_account_id
+                    )
+                    if not arrotondamenti_account_id:
+                        raise UserError(
+                            _("Round down account is not set " "in Accounting Settings")
+                        )
+                    name = _("Rounding down")
+                else:
+                    arrotondamenti_account_id = (
+                        self.env.user.company_id.arrotondamenti_attivi_account_id
+                    )
+                    if not arrotondamenti_account_id:
+                        raise UserError(
+                            _("Round up account is not set " "in Accounting Settings")
+                        )
+                    name = _("Rounding up")
+                upd_vals = {
+                    "move_id": invoice.id,
+                    "name": name,
+                    "account_id": arrotondamenti_account_id.id,
+                    "price_unit": invoice.efatt_rounding,
+                    "quantity": 1,
+                    "exclude_from_invoice_tab": False,
+                }
+                self.create_and_get_line_id(
+                    invoice_line_ids, invoice_line_model, upd_vals
+                )
+        return invoice_line_ids
 
     def set_activity_progress(self, FatturaBody, invoice):
         invoice_id = invoice.id
@@ -1226,7 +1277,7 @@ class WizardImportFatturapa(models.TransientModel):
                 PayDataId = PaymentDataModel.create(
                     {"payment_terms": term_id, "invoice_id": invoice_id}
                 ).id
-                self._createPaymentsLine(PayDataId, PaymentLine, partner_id)
+                self._createPaymentsLine(PayDataId, PaymentLine, partner_id, invoice)
 
     def set_withholding_tax(self, FatturaBody, invoice_data):
         Withholdings = FatturaBody.DatiGenerali.DatiGeneraliDocumento.DatiRitenuta
@@ -1281,52 +1332,58 @@ class WizardImportFatturapa(models.TransientModel):
         return wt_founds
 
     def set_welfares_fund(self, FatturaBody, credit_account_id, invoice, wt_founds):
-        if not self.e_invoice_detail_level == "2":
-            return
+        invoice_line_model = self.env["account.move.line"]
+        invoice_line_ids = []
+        if self.e_invoice_detail_level == "2":
 
-        Welfares = FatturaBody.DatiGenerali.DatiGeneraliDocumento.DatiCassaPrevidenziale
-        if not Welfares:
-            return
-
-        WelfareFundLineModel = self.env["welfare.fund.data.line"]
-        for welfareLine in Welfares:
-            WalfarLineVals = self._prepareWelfareLine(invoice.id, welfareLine)
-            WelfareFundLineModel.create(WalfarLineVals)
-
-            if welfareLine.TipoCassa == "TC07":
-                continue
-
-            line_vals = self._prepare_generic_line_data(welfareLine)
-            line_vals.update(
-                {
-                    "name": _("Welfare Fund: %s") % welfareLine.TipoCassa,
-                    "price_unit": float(welfareLine.ImportoContributoCassa),
-                    "move_id": invoice.id,
-                    "account_id": credit_account_id,
-                }
+            Welfares = (
+                FatturaBody.DatiGenerali.DatiGeneraliDocumento.DatiCassaPrevidenziale
             )
-            if welfareLine.Ritenuta:
-                if not wt_founds:
-                    raise UserError(
-                        _(
-                            "Welfare Fund data %s has withholding tax but no "
-                            "withholding tax was found in the system."
-                        )
-                        % welfareLine.TipoCassa
+            if Welfares:
+                WelfareFundLineModel = self.env["welfare.fund.data.line"]
+                for welfareLine in Welfares:
+                    WalfarLineVals = self._prepareWelfareLine(invoice.id, welfareLine)
+                    WelfareFundLineModel.create(WalfarLineVals)
+
+                    if welfareLine.TipoCassa == "TC07":
+                        continue
+
+
+                    line_vals = self._prepare_generic_line_data(welfareLine)
+                    line_vals.update(
+                        {
+                            "name": _("Welfare Fund: %s") % welfareLine.TipoCassa,
+                            "price_unit": float(welfareLine.ImportoContributoCassa),
+                            "move_id": invoice.id,
+                            "account_id": credit_account_id,
+                            "quantity": 1,
+                        }
                     )
-                line_vals["invoice_line_tax_wt_ids"] = [
-                    (6, 0, [wt.id for wt in wt_founds])
-                ]
-            if self.env.company.cassa_previdenziale_product_id:
-                cassa_previdenziale_product = (
-                    self.env.company.cassa_previdenziale_product_id
-                )
-                line_vals["product_id"] = cassa_previdenziale_product.id
-                line_vals["name"] = cassa_previdenziale_product.name
-                self.adjust_accounting_data(cassa_previdenziale_product, line_vals)
-            self.env["account.move.line"].with_context(
-                check_move_validity=False
-            ).create(line_vals)
+                    if welfareLine.Ritenuta:
+                        if not wt_founds:
+                            raise UserError(
+                                _(
+                                    "Welfare Fund data %s has withholding tax but no "
+                                    "withholding tax was found in the system."
+                                )
+                                % welfareLine.TipoCassa
+                            )
+                        line_vals["invoice_line_tax_wt_ids"] = [
+                            (6, 0, [wt.id for wt in wt_founds])
+                        ]
+                    if self.env.company.cassa_previdenziale_product_id:
+                        cassa_previdenziale_product = (
+                            self.env.company.cassa_previdenziale_product_id
+                        )
+                        line_vals["product_id"] = cassa_previdenziale_product.id
+                        line_vals["name"] = cassa_previdenziale_product.name
+                        self.adjust_accounting_data(
+                            cassa_previdenziale_product, line_vals
+                        )
+                    self.create_and_get_line_id(
+                        invoice_line_ids, invoice_line_model, line_vals
+                    )
+        return invoice_line_ids
 
     def _convert_datetime(self, dtstring):
         ret = False
@@ -1404,12 +1461,10 @@ class WizardImportFatturapa(models.TransientModel):
         if product:
             invoice_line_data["product_id"] = product.id
             self.adjust_accounting_data(product, invoice_line_data)
-        invoice_line_id = (
-            invoice_line_model.with_context(check_move_validity=False)
-            .create(invoice_line_data)
-            .id
+        self.create_and_get_line_id(
+            invoice_lines, invoice_line_model, invoice_line_data
         )
-        invoice_lines.append(invoice_line_id)
+
 
     # move_id
     # account_id
@@ -1417,8 +1472,6 @@ class WizardImportFatturapa(models.TransientModel):
         self, FatturaBody, credit_account_id, partner, wt_founds, invoice
     ):
 
-        if self.e_invoice_detail_level == "0":
-            return
 
         invoice_lines = []
         invoice_line_model = self.env["account.move.line"]
@@ -1446,9 +1499,7 @@ class WizardImportFatturapa(models.TransientModel):
                     product, invoice_line_data, invoice_lines, invoice_line_model
                 )
 
-        invoice.with_context(check_move_validity=False).update(
-            {"invoice_line_ids": [(6, 0, invoice_lines)]}
-        )
+        return invoice_lines
 
     def check_invoice_amount(self, invoice, FatturaElettronicaBody):
         dgd = FatturaElettronicaBody.DatiGenerali.DatiGeneraliDocumento
@@ -1481,15 +1532,23 @@ class WizardImportFatturapa(models.TransientModel):
     def get_invoice_obj(self, fatturapa_attachment):
         xml_string = fatturapa_attachment.get_xml_string()
         return efattura.CreateFromDocument(xml_string)
+    def create_and_get_line_id(self, invoice_line_ids, invoice_line_model, upd_vals):
+        invoice_line_id = (
+            invoice_line_model.with_context(check_move_validity=False)
+            .create(upd_vals)
+            .id
+        )
+        invoice_line_ids.append(invoice_line_id)
 
     def importFatturaPA(self):
         self.ensure_one()
         fatturapa_attachment_obj = self.env["fatturapa.attachment.in"]
         fatturapa_attachment_ids = self.env.context.get("active_ids", False)
         new_invoices = []
+        # convert to dict in order to be able to modify context
+        self.env.context = dict(self.env.context)
         for fatturapa_attachment_id in fatturapa_attachment_ids:
-            # XXX - da controllare
-            # self.__dict__.update(self.with_context(inconsistencies="").__dict__)
+            self.env.context.update(inconsistencies="")
             fatturapa_attachment = fatturapa_attachment_obj.browse(
                 fatturapa_attachment_id
             )
@@ -1519,7 +1578,7 @@ class WizardImportFatturapa(models.TransientModel):
             for fattura in fatt.FatturaElettronicaBody:
 
                 # reset inconsistencies
-                # self.__dict__.update(self.with_context(inconsistencies="").__dict__)
+                self.env.context.update(inconsistencies="")
 
                 invoice = self.invoiceCreate(
                     fatt, fatturapa_attachment, fattura, partner_id

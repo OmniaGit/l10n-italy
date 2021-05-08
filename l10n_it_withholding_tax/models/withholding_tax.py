@@ -18,7 +18,7 @@ class WithholdingTax(models.Model):
         for wt in self:
             wt.tax = 0
             wt.base = 1
-            if not wt.id:
+            if not wt._origin.id:
                 continue
             self.env.cr.execute(
                 """
@@ -27,7 +27,7 @@ class WithholdingTax(models.Model):
                      and (date_start <= current_date or date_start is null)
                      and (date_stop >= current_date or date_stop is null)
                     ORDER by date_start LIMIT 1""",
-                (wt.id,),
+                (wt._origin.id,),
             )
             rate = self.env.cr.fetchone()
             if rate:
@@ -302,11 +302,7 @@ class WithholdingTaxMove(models.Model):
     )
     statement_id = fields.Many2one("withholding.tax.statement", "Statement")
     wt_type = fields.Selection(
-        [
-            ("in", "In"),
-            ("out", "Out"),
-        ],
-        "Type",
+        string="Type",
         store=True,
         related="statement_id.wt_type",
     )
@@ -418,7 +414,7 @@ class WithholdingTaxMove(models.Model):
                         ] = self.withholding_tax_id.account_receivable_id.id
                 else:
                     ml_vals["credit"] = abs(self.amount)
-                    if self.credit_debit_line_id.invoice_id.move_type in [
+                    if self.credit_debit_line_id.move_id.move_type in [
                         "in_refund",
                         "out_refund",
                     ]:
@@ -434,7 +430,7 @@ class WithholdingTaxMove(models.Model):
 
         move_vals["line_ids"] = move_lines
         move = self.env["account.move"].create(move_vals)
-        move.post()
+        move.action_post()
         # Save move in the wt move
         self.wt_account_move_id = move.id
 
@@ -448,7 +444,7 @@ class WithholdingTaxMove(models.Model):
                 line_to_reconcile = line
                 break
         if line_to_reconcile:
-            if self.credit_debit_line_id.invoice_id.move_type in [
+            if self.credit_debit_line_id.move_id.move_type in [
                 "in_refund",
                 "out_invoice",
             ]:
@@ -464,6 +460,8 @@ class WithholdingTaxMove(models.Model):
                     "debit_move_id": debit_move_id,
                     "credit_move_id": credit_move_id,
                     "amount": abs(self.amount),
+                    "credit_amount_currency": abs(self.amount),
+                    "debit_amount_currency": abs(self.amount),
                 }
             )
 

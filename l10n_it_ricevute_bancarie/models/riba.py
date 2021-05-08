@@ -37,6 +37,7 @@ class RibaList(models.Model):
 
     _name = "riba.distinta"
     _description = "C/O Slip"
+    _inherit = ["mail.thread"]
     _order = "date_created desc"
 
     name = fields.Char(
@@ -98,9 +99,7 @@ class RibaList(models.Model):
         required=True,
         readonly=True,
         states={"draft": [("readonly", False)]},
-        default=lambda self: self.env["res.company"]._company_default_get(
-            "riba.distinta"
-        ),
+        default=lambda self: self.env.company,
     )
     acceptance_move_ids = fields.Many2many(
         "account.move",

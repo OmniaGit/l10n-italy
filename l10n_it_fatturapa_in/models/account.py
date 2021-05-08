@@ -62,7 +62,7 @@ class AccountInvoice(models.Model):
                 sign = inv.move_type in ["in_refund", "out_refund"] and -1 or 1
                 inv.amount_total_signed = inv.amount_total * sign
 
-    def invoice_validate(self):
+    def action_post(self):
         for invoice in self:
             if (
                 invoice.e_invoice_validation_error
@@ -72,14 +72,14 @@ class AccountInvoice(models.Model):
                     _("The invoice '%s' doesn't match the related e-invoice")
                     % invoice.display_name
                 )
-        return super(AccountInvoice, self).invoice_validate()
+        return super().action_post()
 
     def e_inv_check_amount_untaxed(self):
         error_message = ""
         if (
             self.e_invoice_amount_untaxed
             and float_compare(
-                self.amount_untaxed,
+                self.amount_untaxed - self.efatt_rounding,
                 # Using abs because odoo invoice total can't be negative,
                 # while XML total can.
                 # See process_negative_lines method
@@ -124,7 +124,7 @@ class AccountInvoice(models.Model):
         if (
             self.e_invoice_amount_total
             and float_compare(
-                self.amount_total,
+                self.amount_total - self.efatt_rounding,
                 abs(self.e_invoice_amount_total),
                 precision_rounding=self.currency_id.rounding,
             )
@@ -311,8 +311,12 @@ class AccountInvoice(models.Model):
                 return
         # if every line is negative, change them all
         for line in self.invoice_line_ids:
-            line.price_unit = -line.price_unit
-        self._recompute_dynamic_lines(recompute_all_taxes=True)
+            line.with_context(check_move_validity=False).update(
+                {"price_unit": -line.price_unit}
+            )
+        self.with_context(check_move_validity=False)._recompute_dynamic_lines(
+            recompute_all_taxes=True
+        )
 
 
 class FatturapaArticleCode(models.Model):

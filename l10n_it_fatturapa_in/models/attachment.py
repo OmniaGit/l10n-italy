@@ -83,6 +83,9 @@ class FatturaPAAttachmentIn(models.Model):
     def get_xml_string(self):
         return self.ir_attachment_id.get_xml_string()
 
+    def recompute_xml_fields(self):
+        self._compute_xml_data()
+        self._compute_registered()
     @api.depends("ir_attachment_id.datas")
     def _compute_xml_data(self):
         for att in self:
@@ -93,24 +96,23 @@ class FatturaPAAttachmentIn(models.Model):
             wiz_obj = self.env["wizard.import.fatturapa"].with_context(
                 from_attachment=att
             )
-            if wiz_obj:
-                fatt = wiz_obj.get_invoice_obj(att)
-                cedentePrestatore = fatt.FatturaElettronicaHeader.CedentePrestatore
-                partner_id = wiz_obj.getCedPrest(cedentePrestatore)
-                att.xml_supplier_id = partner_id
-                att.invoices_number = len(fatt.FatturaElettronicaBody)
-                att.invoices_total = 0
-                invoices_date = []
-                for invoice_body in fatt.FatturaElettronicaBody:
-                    dgd = invoice_body.DatiGenerali.DatiGeneraliDocumento
-                    att.invoices_total += float(dgd.ImportoTotaleDocumento or 0)
-                    invoice_date = format_date(
-                        att.with_context(lang=att.env.user.lang).env,
-                        fields.Date.from_string(dgd.Data),
-                    )
-                    if invoice_date not in invoices_date:
-                        invoices_date.append(invoice_date)
-                att.invoices_date = " ".join(invoices_date)
+            fatt = wiz_obj.get_invoice_obj(att)
+            cedentePrestatore = fatt.FatturaElettronicaHeader.CedentePrestatore
+            partner_id = wiz_obj.getCedPrest(cedentePrestatore)
+            att.xml_supplier_id = partner_id
+            att.invoices_number = len(fatt.FatturaElettronicaBody)
+            att.invoices_total = 0
+            invoices_date = []
+            for invoice_body in fatt.FatturaElettronicaBody:
+                dgd = invoice_body.DatiGenerali.DatiGeneraliDocumento
+                att.invoices_total += float(dgd.ImportoTotaleDocumento or 0)
+                invoice_date = format_date(
+                    att.with_context(lang=att.env.user.lang).env,
+                    fields.Date.from_string(dgd.Data),
+                )
+                if invoice_date not in invoices_date:
+                    invoices_date.append(invoice_date)
+            att.invoices_date = " ".join(invoices_date)
 
     @api.depends("in_invoice_ids")
     def _compute_registered(self):

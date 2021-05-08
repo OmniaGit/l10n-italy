@@ -76,21 +76,53 @@ class FatturaPACommon(AccountTestInvoicingCommon):
         self.product_product_10.barcode = False
         self.product_order_01.default_code = False
         self.product_order_01.barcode = False
-        self.tax_22 = (
-            self.env.ref("l10n_it_fatturapa.tax_22")
-            .sudo()
-            .copy({"company_id": self.env.company.id})
-        )
-        self.tax_10 = (
-            self.env.ref("l10n_it_fatturapa.tax_10")
-            .sudo()
-            .copy({"company_id": self.env.company.id})
-        )
-        self.tax_22_SP = (
-            self.env.ref("l10n_it_fatturapa.tax_22_SP")
-            .sudo()
-            .copy({"company_id": self.env.company.id})
-        )
+        # XXX l10n_it_fatturapa.tax_* should be either fixed or removed
+        # here we need to copy the values to be able to use them
+        # as company (in the accounts) is different
+        def _tax_vals(ref):
+            # if the repartition_lines have an account set, we replace it
+            tax = self.env.ref(ref).sudo()
+            invoice_rpls = [
+                (
+                    0,
+                    0,
+                    {
+                        "factor_percent": rpl.factor_percent,
+                        "repartition_type": rpl.repartition_type,
+                        "account_id": self.company_data["default_account_tax_sale"].id
+                        if rpl.account_id
+                        else None,
+                    },
+                )
+                for rpl in tax.invoice_repartition_line_ids
+            ]
+            refund_rpls = [
+                (
+                    0,
+                    0,
+                    {
+                        "factor_percent": rpl.factor_percent,
+                        "repartition_type": rpl.repartition_type,
+                        "account_id": self.company_data["default_account_tax_sale"].id
+                        if rpl.account_id
+                        else None,
+                    },
+                )
+                for rpl in tax.refund_repartition_line_ids
+            ]
+            return {
+                "name": tax.name,
+                "description": tax.description,
+                "amount": tax.amount,
+                "type_tax_use": tax.type_tax_use,
+                "invoice_repartition_line_ids": invoice_rpls,
+                "refund_repartition_line_ids": refund_rpls,
+            }
+
+        tax_model = self.env["account.tax"]
+        self.tax_22 = tax_model.create(_tax_vals("l10n_it_fatturapa.tax_22"))
+        self.tax_10 = tax_model.create(_tax_vals("l10n_it_fatturapa.tax_10"))
+        self.tax_22_SP = tax_model.create(_tax_vals("l10n_it_fatturapa.tax_22_SP"))
         self.res_partner_fatturapa_0 = self.env.ref(
             "l10n_it_fatturapa.res_partner_fatturapa_0"
         )

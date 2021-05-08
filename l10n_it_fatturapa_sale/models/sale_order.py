@@ -15,11 +15,12 @@ class SaleOrder(models.Model):
         groups="account.group_account_user",
     )
 
-    def _finalize_invoices(self, invoices, references):
-        res = super()._finalize_invoices(invoices, references)
+    def _create_invoices(self, grouped=False, final=False, date=None):
+        moves = super()._create_invoices(grouped, final, date)
+
         # To each invoice, link the documents of the related order
         # only if the order is in `self`
-        for invoice in invoices.values():
+        for invoice in moves:
             orders = invoice.invoice_line_ids.mapped("sale_line_ids.order_id")
             orders = orders.filtered(lambda o: o in self)
             sale_documents = orders.mapped("related_documents")
@@ -30,7 +31,7 @@ class SaleOrder(models.Model):
                     ],
                 }
             )
-        return res
+        return moves
 
     def unlink(self):
         related_documents = self.mapped("related_documents")

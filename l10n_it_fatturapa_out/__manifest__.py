@@ -17,6 +17,7 @@
     "depends": [
         "l10n_it_account",
         "l10n_it_fatturapa",
+        "l10n_it_fiscal_document_type",
     ],
     "data": [
         "data/invoice_it_template.xml",

@@ -37,6 +37,11 @@ class TestFatturaPAXMLValidation(FatturaPACommon):
         super(TestFatturaPAXMLValidation, self).setUp()
         self.company = self.env.company = self.sales_journal.company_id
 
+        # XXX - a company named "YourCompany" alread exists
+        # we move it out of the way but we should do better here
+        self.env.company.sudo().search([("name", "=", "YourCompany")]).write(
+            {"name": "YourCompany_"}
+        )
         self.env.company.name = "YourCompany"
         self.env.company.vat = "IT06363391001"
         self.env.company.fatturapa_art73 = True

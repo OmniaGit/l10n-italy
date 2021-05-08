@@ -1,4 +1,4 @@
-# Copyright 2018 Sergio Corato (https://efatto.it)
+# Copyright 2018 Sergio Corato (https://efatto.it).
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import _, api, exceptions, fields, models
@@ -21,9 +21,7 @@ class SdiChannel(models.Model):
         "res.company",
         string="Company",
         required=True,
-        default=lambda self: self.env["res.company"]._company_default_get(
-            "sdi.channel"
-        ),
+        default=lambda self: self.env.company,
     )
     channel_type = fields.Selection(
         string="ES channel type",
