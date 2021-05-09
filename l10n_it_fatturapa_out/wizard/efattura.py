@@ -244,7 +244,7 @@ class EFatturaOut:
                     out[new_key] = {
                         "AliquotaIVA": "22.00",
                         "ImponibileImporto": 0.00,
-                        "Imposta": 0.00,
+                        "Imposta": 0.00
                     }
             return list(out.values())
 
