@@ -21,6 +21,14 @@
                     <attribute name="groups" />
                 </field>
 
+<!--
+                <xpath
+                    expr="//field[@name='invoice_line_ids']/tree"
+                    position="attributes"
+                >
+                    <attribute name="editable" />
+                </xpath>
+-->
                 <xpath
                     expr="//field[@name='invoice_line_ids']/form/sheet/field[@name='name']"
                     position="after"
