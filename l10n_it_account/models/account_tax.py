@@ -87,4 +87,6 @@ class AccountTax(models.Model):
                 deductible += tmp_amount
             else:
                 undeductible += tmp_amount
+        if not tax_amount:
+            tax_amount = deductible + undeductible
         return (tax_name, debit_imponibile, tax_amount, deductible, undeductible)
