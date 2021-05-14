@@ -1,2 +1,1 @@
-from . import attachment
-from . import account_invoice
+from . import fatturapa_attachment_in

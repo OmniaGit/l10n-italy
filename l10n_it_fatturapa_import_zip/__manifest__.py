@@ -1,28 +1,27 @@
-# © 2020 Lorenzo Battistini
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-
+# Copyright 2021 Sergio Corato (https://efatto.it)
+# Copyright 2021 Matteo Boscolo (https://www.omniasolutions.eu)
+# Copyright 2021 Gianmarco Conte <gconte@dinamicheaziendali.it>
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 {
-    "name": "ITA - Fattura elettronica - Import ZIP",
+    "name": "Italian Localization - Fattura elettronica - Import ZIP",
+    "summary": "Permette di importare uno ZIP con diversi file XML di "
+    "fatture elettroniche di acquisto",
     "version": "14.0.1.0.0",
-    "category": "Localization/Italy",
+    "category": "other",
     "website": "https://github.com/OCA/l10n-italy",
-    "author": "TAKOBI, Odoo Community Association (OCA)",
+    "author": "Matteo Boscolo, Sergio Corato, Odoo Community Association (OCA)",
+    "maintainers": ["info@omniasolutions.eu"],
     "license": "AGPL-3",
     "application": False,
     "installable": True,
     "depends": [
-        "l10n_it_account",
-        "l10n_it_fiscal_document_type",
-        "l10n_it_fatturapa_out",
         "l10n_it_fatturapa_in",
-        "l10n_it_fatturapa_pec",
-        "l10n_it_withholding_tax_reason",
     ],
+    "external_dependencies": {
+        "python": ["zipfile"],
+    },
     "data": [
-        "views/account_invoice_views.xml",
-        "views/attachment_views.xml",
         "security/ir.model.access.csv",
-        "security/rules.xml",
+        "wizard/wizard_import_invoice.xml",
     ],
-    "auto_install": False,
 }

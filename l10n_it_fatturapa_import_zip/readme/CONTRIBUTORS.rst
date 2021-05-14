@@ -1,1 +1,1 @@
-* TAKOBI
+* Gianmarco Conte <gconte@dinamicheaziendali.it>
