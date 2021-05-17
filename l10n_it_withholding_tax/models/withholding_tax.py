@@ -401,7 +401,7 @@ class WithholdingTaxMove(models.Model):
                 )
                 if self.payment_line_id.credit:
                     ml_vals["debit"] = abs(self.amount)
-                    if self.credit_debit_line_id.invoice_id.move_type in [
+                    if self.credit_debit_line_id.move_id.move_type in [
                         "in_refund",
                         "out_refund",
                     ]:

@@ -12,7 +12,7 @@
                     type="action"
                     string="Export E-invoice"
                     class="oe_highlight"
-                    attrs="{'invisible': ['|', '|', ('fatturapa_attachment_out_id', '!=', False), ('state' ,'not in', ['open', 'paid']), ('electronic_invoice_subjected', '=', False)]}"
+                    attrs="{'invisible': ['|', '|', ('fatturapa_attachment_out_id', '!=', False), ('state' ,'!=', 'posted'), ('electronic_invoice_subjected', '=', False)]}"
                 />
             </button>
             <field name="partner_id" position="after">

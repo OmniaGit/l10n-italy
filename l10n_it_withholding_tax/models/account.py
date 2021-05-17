@@ -50,12 +50,13 @@ class AccountPartialReconcile(models.Model):
         if vals.get("credit_move_id"):
             ml_ids.append(vals.get("credit_move_id"))
         move_lines = self.env["account.move.line"].browse(ml_ids)
-        for ml in move_lines:
-            domain = [("id", "=", ml.move_id.id)]
-            invoice = self.env["account.move"].search(domain)
-            if invoice:
-                break
-        # invoice.ensure_one() XXX - should we do this?
+        invoice = move_lines.filtered(lambda x: x.exists()).move_id.filtered(
+            lambda x: x.is_invoice()
+        )
+        # XXX
+        # the following code mimics 12.0 behaviour; probably it's not correct
+        if invoice:
+            invoice = invoice[0]
         # Limit value of reconciliation
         if invoice and invoice.withholding_tax and invoice.amount_net_pay:
             # We must consider amount in foreign currency, if present
@@ -410,7 +411,7 @@ class AccountMove(models.Model):
                 # update line
                 move_line.write({"withholding_tax_amount": wt_amount})
             # Create WT Statement
-            self.create_wt_statement()
+            inv.create_wt_statement()
         return res
 
     def get_wt_taxes_values(self):
