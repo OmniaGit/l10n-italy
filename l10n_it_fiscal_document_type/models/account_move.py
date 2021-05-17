@@ -5,10 +5,11 @@ class AccountMove(models.Model):
     _inherit = "account.move"
         
     @api.depends("partner_id", "journal_id", "move_type", "fiscal_position_id")
-    def _compute_set_document_fiscal_type(self):
+    def _compute_set_document_fiscal_type(self, force_update=False):
         for self_id in self:
-            if self_id.state != "draft" and self_id.fiscal_document_type_id:
-                continue
+            if not force_update:
+                if self_id.state != "draft" and self_id.fiscal_document_type_id:
+                    continue
             self_id.fiscal_document_type_id = False
             dt = self_id._get_document_fiscal_type()
             if dt:

@@ -43,7 +43,7 @@ class AccountMoveReversal(models.TransientModel):
     def reverse_moves(self):
         res = super(AccountMoveReversal, self).reverse_moves()
         for account_move_id in self.new_move_ids:
-            account_move_id._compute_set_document_fiscal_type()
+            account_move_id._compute_set_document_fiscal_type(force_update=True)
         return res
     
     
