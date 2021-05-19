@@ -3,7 +3,8 @@ from odoo.exceptions import UserError
 
 class AccountMove(models.Model):
     _inherit = "account.move"
-        
+    is_inadvaced_invoice = fields.Boolean("Is a in advanced invoice ?", default=False)
+    
     @api.depends("partner_id", "journal_id", "move_type", "fiscal_position_id")
     def _compute_set_document_fiscal_type(self, force_update=False):
         for self_id in self:
@@ -18,12 +19,15 @@ class AccountMove(models.Model):
     def _get_document_fiscal_type(self):
         if self.move_type in 'out_invoice':
             domain = [('out_invoice','=', True)]
+            if self.is_inadvaced_invoice:
+                domain.append(("is_inadvaced", "=", True)) 
         elif self.move_type in'out_refund':
             domain = [('out_refund','=', True)]
         elif self.move_type in'in_invoice':
             domain = [('in_invoice','=', True)]
         elif self.move_type in'in_refund':
             domain = [('in_refund','=', True)]
+
         if self.journal_id:
             jornalDomain = domain + [("journal_ids", "in", [self.journal_id.id])]
         doc_id = False

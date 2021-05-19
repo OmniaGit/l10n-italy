@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, ERP-PLM-CAD Open Source Solutions
+#    OmniaSolutions, ERP-PLM-CAD Open Source Solution
 #    Copyright (C) 2011-2021 https://OmniaSolutions.website
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -19,33 +19,28 @@
 #
 ##############################################################################
 '''
-Created on 17 May 2021
+Created on 19 May 2021
 
 @author: mboscolo
 '''
-import logging
-import datetime
-from odoo import models
-from odoo import fields
-from odoo import api
-from odoo import _
-from odoo.exceptions import UserError
-from datetime import timedelta
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
-    
-    
-class AccountMoveReversal(models.TransientModel):
-    """
-    Account move reversal wizard, it cancel an account move by reversing it.
-    """
-    _inherit = 'account.move.reversal'
+from odoo import api, fields, models, SUPERUSER_ID, _
+from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.tools.misc import formatLang, get_lang
+from odoo.osv import expression
+from odoo.tools import float_is_zero, float_compare
 
-    def reverse_moves(self):
-        res = super(AccountMoveReversal, self).reverse_moves()
-        for account_move_id in self.new_move_ids:
-            account_move_id.is_inadvaced_invoice=False
-            account_move_id._compute_set_document_fiscal_type(force_update=True)
+class SaleAdvancePaymentInv(models.TransientModel):
+    _inherit = "sale.advance.payment.inv"
+    
+    def _prepare_invoice_values(self,
+                                order,
+                                name, 
+                                amount, 
+                                so_line):
+        res = super(SaleAdvancePaymentInv, self)._prepare_invoice_values(order, name, amount, so_line)
+        if self.advance_payment_method == 'percentage' or self.advance_payment_method == 'fixed':
+            res['is_inadvaced_invoice'] = True
         return res
-    
-    
-    
+        
+        
+        
