@@ -172,6 +172,8 @@ class RibaList(models.Model):
             for line in riba_list.line_ids:
                 if line.state == "accredited":
                     line.riba_line_settlement()
+                else:
+                    raise UserError("Riba line %s not accreditated !!" % line.display_name)
 
     @api.onchange("date_accepted", "date_accreditation")
     def _onchange_date(self):
