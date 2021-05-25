@@ -20,7 +20,9 @@ class AccountMove(models.Model):
         if self.move_type in 'out_invoice':
             domain = [('out_invoice','=', True)]
             if self.is_inadvaced_invoice:
-                domain.append(("is_inadvaced", "=", True)) 
+                domain.append(("is_inadvaced", "=", True))
+            else:
+                domain.append(("is_inadvaced", "!=", True))
         elif self.move_type in'out_refund':
             domain = [('out_refund','=', True)]
         elif self.move_type in'in_invoice':
