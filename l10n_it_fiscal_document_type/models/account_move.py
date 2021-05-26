@@ -17,6 +17,7 @@ class AccountMove(models.Model):
                 self_id.fiscal_document_type_id = dt.id
     
     def _get_document_fiscal_type(self):
+        domain = []
         if self.move_type in 'out_invoice':
             domain = [('out_invoice','=', True)]
             if self.is_inadvaced_invoice:
