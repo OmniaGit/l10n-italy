@@ -1580,7 +1580,7 @@ class WizardImportFatturapa(models.TransientModel):
         invoice_line_ids.append(invoice_line_id)
 
     def _set_decimal_precision(self, precision_name, field_name):
-        precision = self.env["decimal.precision"].search(
+        precision = self.env["decimal.precision"].sudo().search(
             [("name", "=", precision_name)], limit=1
         )
         different_precisions = original_precision = None
