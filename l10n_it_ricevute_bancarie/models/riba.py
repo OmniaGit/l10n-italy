@@ -410,7 +410,8 @@ class RibaListLine(models.Model):
                     move_line_vals['debit'] = abs(amount)         
                 move_line = move_line_model.with_context({'check_move_validity': False}).create(move_line_vals)
                 to_be_reconciled |= move_line
-                to_be_reconciled |= riba_move_line.move_line_id
+                if not riba_move_line.move_line_id.reconciled:
+                    to_be_reconciled |= riba_move_line.move_line_id
             values = {
                 'name': 'C/O %s-%s Ref. %s - %s' % (
                     line.distinta_id.name,
