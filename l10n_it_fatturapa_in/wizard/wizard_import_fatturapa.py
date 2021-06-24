@@ -1002,7 +1002,7 @@ class WizardImportFatturapa(models.TransientModel):
 
         invoice._onchange_invoice_line_wt_ids()
         invoice._recompute_dynamic_lines()
-        invoice.write(invoice._convert_to_write(invoice._cache))
+        invoice.sudo().write(invoice._convert_to_write(invoice._cache))
 
         rel_docs_dict = {
             # 2.1.2
@@ -1607,6 +1607,7 @@ class WizardImportFatturapa(models.TransientModel):
             new_price_precision = new_env["decimal.precision"].browse(precision.id)
             new_price_precision.sudo().write({"digits": original_precision})
             new_cr.commit()
+
     def importFatturaPA(self):
         self.ensure_one()
         fatturapa_attachment_obj = self.env["fatturapa.attachment.in"]

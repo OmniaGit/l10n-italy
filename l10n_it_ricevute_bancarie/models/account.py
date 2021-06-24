@@ -261,7 +261,7 @@ class AccountMoveLine(models.Model):
 
     def reconcile(self):
         # Pre check in order to have better message in case 
-        msg =[]
+        msg = []
         for line in self.filtered(lambda x : x.reconciled==True):
             msg.append(line.move_name)
         if msg:
