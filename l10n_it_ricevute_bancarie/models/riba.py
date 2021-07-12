@@ -437,7 +437,7 @@ class RibaListLine(models.Model):
                 values['debit'] = 0.0
             move_line_model.with_context({'check_move_validity': False}).create(values)
             move.post()
-            to_be_reconciled.reconcile()
+            to_be_reconciled.filtered(lambda x : x.reconciled==False).reconcile()
             line.write(
                 {
                     "acceptance_move_id": move.id,
