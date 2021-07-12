@@ -263,7 +263,7 @@ class AccountMoveLine(models.Model):
         # Pre check in order to have better message in case 
         msg = []
         for line in self.filtered(lambda x : x.reconciled==True):
-            msg.append(line.move_name)
+            msg.append(line.move_id.display_name)
         if msg:
             raise UserError(_("You are trying to reconcile moves %s that has already been reconciled.") % msg)
         res = super(AccountMoveLine, self).reconcile()
