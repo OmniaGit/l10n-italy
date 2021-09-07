@@ -174,68 +174,68 @@ class AccountInvoice(models.Model):
         "invoice_date",
     )
     def _compute_e_invoice_validation_error(self):
-        self.ensure_one()
-        self.e_invoice_validation_error = False
-        self.e_invoice_validation_message = False
-
-        bills_to_check = self.filtered(
-            lambda inv: inv.is_purchase_document()
-            and inv.state in ["draft", "posted"]
-            and inv.fatturapa_attachment_in_id
-        )
-        for bill in bills_to_check:
-            error_messages = list()
-
-            error_message = bill.e_inv_check_amount_untaxed()
-            if error_message:
-                error_messages.append(error_message)
-
-            error_message = bill.e_inv_check_amount_tax()
-            if error_message:
-                error_messages.append(error_message)
-
-            error_message = bill.e_inv_check_amount_total()
-            if error_message:
-                error_messages.append(error_message)
-
-            error_message = bill.e_inv_dati_ritenuta()
-            if error_message:
-                error_messages.append(error_message)
-
-            if (
-                bill.e_invoice_reference
-                and bill.payment_reference != bill.e_invoice_reference
-            ):
-                error_messages.append(
-                    _(
-                        "Vendor reference ({bill_vendor_ref}) "
-                        "does not match with "
-                        "e-bill vendor reference ({e_bill_vendor_ref})"
-                    ).format(
-                        bill_vendor_ref=bill.payment_reference or "",
-                        e_bill_vendor_ref=bill.e_invoice_reference,
+        for move_id in self:
+            move_id.e_invoice_validation_error = False
+            move_id.e_invoice_validation_message = False
+    
+            bills_to_check = move_id.filtered(
+                lambda inv: inv.is_purchase_document()
+                and inv.state in ["draft", "posted"]
+                and inv.fatturapa_attachment_in_id
+            )
+            for bill in bills_to_check:
+                error_messages = list()
+    
+                error_message = bill.e_inv_check_amount_untaxed()
+                if error_message:
+                    error_messages.append(error_message)
+    
+                error_message = bill.e_inv_check_amount_tax()
+                if error_message:
+                    error_messages.append(error_message)
+    
+                error_message = bill.e_inv_check_amount_total()
+                if error_message:
+                    error_messages.append(error_message)
+    
+                error_message = bill.e_inv_dati_ritenuta()
+                if error_message:
+                    error_messages.append(error_message)
+    
+                if (
+                    bill.e_invoice_reference
+                    and bill.payment_reference != bill.e_invoice_reference
+                ):
+                    error_messages.append(
+                        _(
+                            "Vendor reference ({bill_vendor_ref}) "
+                            "does not match with "
+                            "e-bill vendor reference ({e_bill_vendor_ref})"
+                        ).format(
+                            bill_vendor_ref=bill.payment_reference or "",
+                            e_bill_vendor_ref=bill.e_invoice_reference,
+                        )
                     )
-                )
-
-            if (
-                bill.e_invoice_date_invoice
-                and bill.e_invoice_date_invoice != bill.invoice_date
-            ):
-                error_messages.append(
-                    _(
-                        "Invoice date ({bill_date_invoice}) "
-                        "does not match with "
-                        "e-bill invoice date ({e_bill_date_invoice})"
-                    ).format(
-                        bill_date_invoice=bill.invoice_date or "",
-                        e_bill_date_invoice=bill.e_invoice_date_invoice,
+    
+                if (
+                    bill.e_invoice_date_invoice
+                    and bill.e_invoice_date_invoice != bill.invoice_date
+                ):
+                    error_messages.append(
+                        _(
+                            "Invoice date ({bill_date_invoice}) "
+                            "does not match with "
+                            "e-bill invoice date ({e_bill_date_invoice})"
+                        ).format(
+                            bill_date_invoice=bill.invoice_date or "",
+                            e_bill_date_invoice=bill.e_invoice_date_invoice,
+                        )
                     )
-                )
-
-            if not error_messages:
-                continue
-            bill.e_invoice_validation_error = True
-            bill.e_invoice_validation_message = ",\n".join(error_messages) + "."
+    
+                if not error_messages:
+                    continue
+                bill.e_invoice_validation_error = True
+                bill.e_invoice_validation_message = ",\n".join(error_messages) + "."
 
     def name_get(self):
         result = super(AccountInvoice, self).name_get()
