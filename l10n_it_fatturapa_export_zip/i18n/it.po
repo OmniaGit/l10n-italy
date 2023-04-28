@@ -6,15 +6,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2020-01-07 11:13+0000\n"
-"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>\n"
+"PO-Revision-Date: 2023-04-19 15:34+0000\n"
+"Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: none\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 3.10\n"
+"X-Generator: Weblate 4.14.1\n"
 
 #. module: l10n_it_fatturapa_export_zip
 #: code:addons/l10n_it_fatturapa_export_zip/wizard/export_fatturapa.py:0
@@ -62,20 +62,16 @@ msgid "Download ZIP e-invoice XML"
 msgstr "Scaricare ZIP e-fattura XML"
 
 #. module: l10n_it_fatturapa_export_zip
-#: model:ir.model,name:l10n_it_fatturapa_export_zip.model_fatturapa_attachment_in
-msgid "E-bill import file"
-msgstr "File importazione e-fattura"
-
-#. module: l10n_it_fatturapa_export_zip
-#: model:ir.model,name:l10n_it_fatturapa_export_zip.model_fatturapa_attachment_out
-msgid "E-invoice Export File"
-msgstr "File esportazione e-fattura"
-
-#. module: l10n_it_fatturapa_export_zip
 #: code:addons/l10n_it_fatturapa_export_zip/wizard/export_fatturapa.py:0
 #, python-format
 msgid "E-invoice-export"
 msgstr "Esportazione-e-fattura"
+
+#. module: l10n_it_fatturapa_export_zip
+#: model:ir.model,name:l10n_it_fatturapa_export_zip.model_fatturapa_attachment_in
+#: model:ir.model,name:l10n_it_fatturapa_export_zip.model_fatturapa_attachment_out
+msgid "Electronic Invoice"
+msgstr "Fattura elettronica"
 
 #. module: l10n_it_fatturapa_export_zip
 #: code:addons/l10n_it_fatturapa_export_zip/wizard/export_fatturapa.py:0
@@ -144,3 +140,9 @@ msgstr "ZIP esportato"
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_export_zip.view_fatturapa_out_attachment_search
 msgid "ZIP Not Exported"
 msgstr "ZIP non esportato"
+
+#~ msgid "E-bill import file"
+#~ msgstr "File importazione e-fattura"
+
+#~ msgid "E-invoice Export File"
+#~ msgstr "File esportazione e-fattura"

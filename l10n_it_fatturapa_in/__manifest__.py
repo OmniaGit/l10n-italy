@@ -6,12 +6,12 @@
 
 {
     "name": "ITA - Fattura elettronica - Ricezione",
-    "version": "14.0.1.4.5",
+    "version": "14.0.2.0.1",
     "development_status": "Beta",
     "category": "Localization/Italy",
     "summary": "Ricezione fatture elettroniche",
     "author": "Agile Business Group, Innoviu, " "Odoo Community Association (OCA)",
-    "website": "https://github.com/OCA/l10n-italy" "l10n_it_fatturapa_in",
+    "website": "https://github.com/OCA/l10n-italy",
     "license": "AGPL-3",
     "depends": [
         "base_vat",

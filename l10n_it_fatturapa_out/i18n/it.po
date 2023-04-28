@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Odoo Server 10.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-09 10:03+0000\n"
-"PO-Revision-Date: 2022-12-30 11:46+0000\n"
-"Last-Translator: Francesco Foresti <francesco.foresti@ooops404.com>\n"
+"PO-Revision-Date: 2023-04-28 11:14+0000\n"
+"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>\n"
 "Language-Team: \n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
@@ -25,6 +25,10 @@ msgid ""
 "\"Values set here are company-specific.\" aria-label=\"Values set here are "
 "company-specific.\"/>"
 msgstr ""
+"<span class=\"o_form_label\">Emittente</span>\n"
+"                            <span class=\"fa fa-lg fa-building-o\" title=\"I "
+"valori impostati qui sono specifici per azienda.\" aria-label=\"I valori "
+"impostati qui sono specifici per azienda.\"/>"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields.selection,name:l10n_it_fatturapa_out.selection__account_move__fatturapa_state__accepted
@@ -41,6 +45,11 @@ msgstr "Token di accesso"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__message_needaction
 msgid "Action Needed"
 msgstr "Azione richiesta"
+
+#. module: l10n_it_fatturapa_out
+#: model:res.groups,name:l10n_it_fatturapa_out.group_force_e_inv_export_state
+msgid "Allow to force e-invoice export state"
+msgstr "Consentire forzatura stato di esportazione e-fattura"
 
 #. module: l10n_it_fatturapa_out
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.wizard_export_fatturapa_form_view
@@ -112,7 +121,6 @@ msgstr "Contatto"
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__create_uid
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_wizard_export_fatturapa__create_uid
-#: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_fatturapa_out_attachment_form
 msgid "Created by"
 msgstr "Creato da"
 
@@ -146,10 +154,13 @@ msgstr "Dati database"
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_account_config_settings
 msgid "Default user used as transmitter in customer e-invoice"
 msgstr ""
+"Utente predefinito utilizzato come emittente nella fattura elettornica "
+"cliente"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields.selection,name:l10n_it_fatturapa_out.selection__account_move__fatturapa_state__delivered
 #: model:ir.model.fields.selection,name:l10n_it_fatturapa_out.selection__fatturapa_attachment_out__state__validated
+#: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_fatturapa_out_attachment_form
 msgid "Delivered"
 msgstr "Consegnato"
 
@@ -178,10 +189,9 @@ msgstr "Nome visualizzato"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_res_company__e_invoice_transmitter_id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_res_config_settings__e_invoice_transmitter_id
 msgid "E-bill Transmitter"
-msgstr ""
+msgstr "Emittente fattura elettronica"
 
 #. module: l10n_it_fatturapa_out
-#: model:ir.model,name:l10n_it_fatturapa_out.model_fatturapa_attachment_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_account_bank_statement_line__fatturapa_attachment_out_id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_account_move__fatturapa_attachment_out_id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_account_payment__fatturapa_attachment_out_id
@@ -218,16 +228,12 @@ msgid "E-invoice export file still present for invoice %s."
 msgstr "Per la fattura %s è ancora presente il file e-fattura esportato."
 
 #. module: l10n_it_fatturapa_out
-#: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__att_name
-msgid "E-invoice file name"
-msgstr "Nome file e-fattura"
-
-#. module: l10n_it_fatturapa_out
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.account_invoice_line_it_FatturaPA
 msgid "EAN"
 msgstr "EAN"
 
 #. module: l10n_it_fatturapa_out
+#: model:ir.model,name:l10n_it_fatturapa_out.model_fatturapa_attachment_out
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_invoice_form_fatturapa
 msgid "Electronic Invoice"
 msgstr "Fattura elettronica"
@@ -305,17 +311,17 @@ msgstr "Dimensione file"
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__message_follower_ids
 msgid "Followers"
-msgstr "Follower"
+msgstr "Seguito da"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__message_channel_ids
 msgid "Followers (Channels)"
-msgstr "Follower (canali)"
+msgstr "Seguito da (canali)"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__message_partner_ids
 msgid "Followers (Partners)"
-msgstr "Follower (partner)"
+msgstr "Seguito da (partner)"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields.selection,name:l10n_it_fatturapa_out.selection__res_company__xml_divisa_value__force_eur
@@ -329,11 +335,6 @@ msgstr "Forza euro"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__has_pdf_invoice_print
 msgid "Has Pdf Invoice Print"
 msgstr "Contiene stampa fattura in PDF"
-
-#. module: l10n_it_fatturapa_out
-#: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_fatturapa_out_attachment_form
-msgid "History"
-msgstr "Cronologia"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_account_move__id
@@ -427,6 +428,8 @@ msgstr ""
 #, python-format
 msgid "Invoice %s has XML and can't be reset to draft. Delete the XML before."
 msgstr ""
+"File XML già presente per la fattura %s che non può essere resettata a "
+"bozza. Eliminare prima l'XML."
 
 #. module: l10n_it_fatturapa_out
 #: code:addons/l10n_it_fatturapa_out/models/account.py:0
@@ -687,10 +690,20 @@ msgid "SMS Delivery error"
 msgstr "Errore consegna SMS"
 
 #. module: l10n_it_fatturapa_out
+#: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__att_name
+msgid "SdI file name"
+msgstr "Nome file SdI"
+
+#. module: l10n_it_fatturapa_out
 #: model:ir.model.fields.selection,name:l10n_it_fatturapa_out.selection__fatturapa_attachment_out__state__sender_error
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_fatturapa_out_attachment_search
 msgid "Sender Error"
 msgstr "Errore trasmittente"
+
+#. module: l10n_it_fatturapa_out
+#: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__sending_user
+msgid "Sending User"
+msgstr "Utente trasmittente"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields.selection,name:l10n_it_fatturapa_out.selection__account_move__fatturapa_state__sent
@@ -705,8 +718,8 @@ msgstr "Data invio"
 
 #. module: l10n_it_fatturapa_out
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_fatturapa_out_attachment_form
-msgid "Show preview"
-msgstr ""
+msgid "Sent by"
+msgstr "Inviato da"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__state
@@ -778,7 +791,7 @@ msgstr "L'oggetto del database a cui verrà assegnato questo allegato"
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_res_company__e_invoice_transmitter_id
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_res_config_settings__e_invoice_transmitter_id
 msgid "This partner will be used as transmitter in out invoice."
-msgstr ""
+msgstr "Questo partner verrà utilizzato come emittente nella fattura in uscita."
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_wizard_export_fatturapa__report_print_menu
@@ -869,6 +882,12 @@ msgstr "È possibile reimpostare solo file con stato «Errore trasmittente»."
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_fatturapa_out_attachment_form
 msgid "on"
 msgstr "il"
+
+#~ msgid "E-invoice file name"
+#~ msgstr "Nome file e-fattura"
+
+#~ msgid "History"
+#~ msgstr "Cronologia"
 
 #~ msgid "99999999999"
 #~ msgstr "99999999999"
