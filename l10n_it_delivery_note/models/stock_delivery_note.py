@@ -41,6 +41,7 @@ DOMAIN_INVOICE_STATUSES = [s[0] for s in INVOICE_STATUSES]
 class StockDeliveryNote(models.Model):
     _name = "stock.delivery.note"
     _inherit = [
+        "portal.mixin",
         "mail.thread",
         "mail.activity.mixin",
         "stock.picking.checker.mixin",
@@ -264,6 +265,14 @@ class StockDeliveryNote(models.Model):
     show_product_information = fields.Boolean(compute="_compute_boolean_flags")
     company_id = fields.Many2one("res.company", required=True, default=_default_company)
 
+    _sql_constraints = [
+        (
+            "name_uniq",
+            "unique(name, company_id)",
+            "The Delivery note must have unique numbers.",
+        )
+    ]
+
     @api.depends("name", "partner_id", "partner_ref", "partner_id.display_name")
     def name_get(self):
         result = []
@@ -351,6 +360,11 @@ class StockDeliveryNote(models.Model):
         for note in self:
             note.can_change_number = note.state == "draft" and can_change_number
             note.show_product_information = show_product_information
+
+    def _compute_access_url(self):
+        super(StockDeliveryNote, self)._compute_access_url()
+        for dn in self:
+            dn.access_url = "/my/delivery-notes/%s" % (dn.id)
 
     @api.onchange("picking_type")
     def _onchange_picking_type(self):
@@ -604,6 +618,10 @@ class StockDeliveryNote(models.Model):
         return self.env.ref(
             "l10n_it_delivery_note.delivery_note_report_action"
         ).report_action(self)
+
+    def _get_report_base_filename(self):
+        self.ensure_one()
+        return f"Delivery Note - {self.name}"
 
     def update_transport_datetime(self):
         self.transport_datetime = datetime.datetime.now()

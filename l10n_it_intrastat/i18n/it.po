@@ -7,15 +7,15 @@ msgstr ""
 "Project-Id-Version: Odoo Server 12.0+e-20191007\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-09-16 15:53+0000\n"
-"PO-Revision-Date: 2023-04-21 13:42+0000\n"
-"Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
+"PO-Revision-Date: 2023-09-20 16:03+0000\n"
+"Last-Translator: Francesco Foresti <francesco.foresti@ooops404.com>\n"
 "Language-Team: \n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.14.1\n"
+"X-Generator: Weblate 4.17\n"
 
 #. module: l10n_it_intrastat
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_33074100
@@ -783,7 +783,7 @@ msgstr "Sostanze minerali naturali attivate; neri di origine animale"
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_account_intrastat_transaction_nature__active
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_report_intrastat_code__active
 msgid "Active"
-msgstr "Attiva"
+msgstr "Attivo"
 
 #. module: l10n_it_intrastat
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_21021090
@@ -3805,8 +3805,8 @@ msgid ""
 "dolomite or chromite"
 msgstr ""
 "Lavori in pietra o altre sostanze minerali, n.n.a. contenenti magnesite, "
-"magnesia sotto forma di periclasio, dolomite, anche\n"
-"sotto forma di calce dolomitica, o cromite"
+"magnesia sotto forma di periclasio, dolomite, anche sotto forma di calce "
+"dolomitica, o cromite"
 
 #. module: l10n_it_intrastat
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_81039090
@@ -14688,7 +14688,7 @@ msgstr ""
 #. module: l10n_it_intrastat
 #: model:ir.model,name:l10n_it_intrastat.model_res_country
 msgid "Country"
-msgstr "Paese"
+msgstr "Nazione"
 
 #. module: l10n_it_intrastat
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_19024010
@@ -51405,7 +51405,7 @@ msgstr "Termostati, non elettronici, con dispositivo elettrico di scatto"
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_90321089
 msgid "Non-electronic thermostats, without electrical triggering device"
 msgstr ""
-"Termostati, non elettronici (escl. quelli  con dispositivo elettrico di "
+"Termostati, non elettronici (escl. quelli con dispositivo elettrico di "
 "scatto)"
 
 #. module: l10n_it_intrastat
@@ -53070,7 +53070,7 @@ msgstr "Origine"
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_res_company__intrastat_sale_country_origin_id
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_intrastat_company_form
 msgid "Origin Country"
-msgstr "Paese d'origine"
+msgstr "Paese di origine"
 
 #. module: l10n_it_intrastat
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_account_invoice_intrastat__province_origin_id
@@ -55099,7 +55099,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_account_invoice_intrastat__partner_id
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_invoice_intrastat_search
 msgid "Partner"
-msgstr "Contatto"
+msgstr "Partner"
 
 #. module: l10n_it_intrastat
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_account_invoice_intrastat__country_partner_id
@@ -82405,15 +82405,12 @@ msgstr "Natura transazione"
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_transaction_nature_b_view_tree
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_intrastat_company_form
 msgid "Transaction Nature B"
-msgstr "Transazione Natura B"
+msgstr "Transazione natura B"
 
 #. module: l10n_it_intrastat
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_99500000
 msgid "Transactions with small value not arranged according to chapter"
-msgstr ""
-"Codice utilizzato esclusivamente per lo scambio di merci tra Stati membri "
-"per singole operazioni di valore < 200 Euro e per segnalare, in alcuni casi, "
-"prodotti residuali"
+msgstr "Operazioni di modico valore non disposte secondo il capitolo"
 
 #. module: l10n_it_intrastat
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_85198111

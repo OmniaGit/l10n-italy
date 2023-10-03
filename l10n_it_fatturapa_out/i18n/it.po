@@ -7,15 +7,15 @@ msgstr ""
 "Project-Id-Version: Odoo Server 10.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-09 10:03+0000\n"
-"PO-Revision-Date: 2023-04-28 11:14+0000\n"
-"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>\n"
+"PO-Revision-Date: 2023-06-19 17:09+0000\n"
+"Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: \n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.14.1\n"
+"X-Generator: Weblate 4.17\n"
 
 #. module: l10n_it_fatturapa_out
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.view_account_config_settings
@@ -458,7 +458,7 @@ msgstr "Le fatture %s devono appartenere allo stesso partner."
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__message_is_follower
 msgid "Is Follower"
-msgstr "È un follower"
+msgstr "Segue"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachments__is_pdf_invoice_print
@@ -479,6 +479,11 @@ msgstr "Registrazione contabile"
 #: model:ir.model.fields.selection,name:l10n_it_fatturapa_out.selection__res_company__xml_divisa_value__keep_orig
 msgid "Keep original"
 msgstr "Mantieni l'originale"
+
+#. module: l10n_it_fatturapa_out
+#: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__key
+msgid "Key"
+msgstr "Chiave"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_account_move____last_update
@@ -605,6 +610,12 @@ msgstr "Partita IVA del partner %s non impostata."
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__ftpa_preview_link
 msgid "Preview link"
 msgstr "Collegamento di anteprima"
+
+#. module: l10n_it_fatturapa_out
+#: code:addons/l10n_it_fatturapa_out/wizard/wizard_export_fatturapa.py:0
+#, python-format
+msgid "Print report not found"
+msgstr "Stampa resoconto non trovata"
 
 #. module: l10n_it_fatturapa_out
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa_out.account_invoice_it_cedente_prestatore
@@ -737,6 +748,14 @@ msgid "TZ"
 msgstr "TZ"
 
 #. module: l10n_it_fatturapa_out
+#: model:ir.model.fields,help:l10n_it_fatturapa_out.field_fatturapa_attachment_out__key
+msgid ""
+"Technical field used to resolve multiple attachments in a multi-website "
+"environment."
+msgstr ""
+"Campo tecnico usato per gestire allegati multipli in un ambiente multisito."
+
+#. module: l10n_it_fatturapa_out
 #: code:addons/l10n_it_fatturapa_out/models/company.py:0
 #, python-format
 msgid ""
@@ -783,6 +802,11 @@ msgid "The record id this is attached to."
 msgstr "L'ID del record a cui questo è collegato."
 
 #. module: l10n_it_fatturapa_out
+#: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__theme_template_id
+msgid "Theme Template"
+msgstr "Modello del tema"
+
+#. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_fatturapa_attachments__is_pdf_invoice_print
 msgid "This attachment contains the PDF report of the linked invoice"
 msgstr "L'oggetto del database a cui verrà assegnato questo allegato"
@@ -791,7 +815,8 @@ msgstr "L'oggetto del database a cui verrà assegnato questo allegato"
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_res_company__e_invoice_transmitter_id
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_res_config_settings__e_invoice_transmitter_id
 msgid "This partner will be used as transmitter in out invoice."
-msgstr "Questo partner verrà utilizzato come emittente nella fattura in uscita."
+msgstr ""
+"Questo partner verrà utilizzato come emittente nella fattura in uscita."
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_wizard_export_fatturapa__report_print_menu
@@ -842,9 +867,19 @@ msgid "Valuta"
 msgstr "Valuta"
 
 #. module: l10n_it_fatturapa_out
+#: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__website_id
+msgid "Website"
+msgstr "Sito web"
+
+#. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__website_message_ids
 msgid "Website Messages"
 msgstr "Messaggi sito web"
+
+#. module: l10n_it_fatturapa_out
+#: model:ir.model.fields,field_description:l10n_it_fatturapa_out.field_fatturapa_attachment_out__website_url
+msgid "Website URL"
+msgstr "URL sito web"
 
 #. module: l10n_it_fatturapa_out
 #: model:ir.model.fields,help:l10n_it_fatturapa_out.field_fatturapa_attachment_out__website_message_ids
@@ -975,9 +1010,6 @@ msgstr "il"
 #~ msgid "Invoice {invoice} has no tax lines"
 #~ msgstr "La fattura {invoice} non ha righe imposta"
 
-#~ msgid "Key"
-#~ msgstr "Chiave"
-
 #~ msgid "No 'law reference' field for tax %s."
 #~ msgstr "Campo \"Riferimento normativo\" non valorizzato per l'imposta %s."
 
@@ -1018,16 +1050,6 @@ msgstr "il"
 #~ msgid "TIN not set."
 #~ msgstr "Partita IVA non impostata."
 
-#~ msgid ""
-#~ "Technical field used to resolve multiple attachments in a multi-website "
-#~ "environment."
-#~ msgstr ""
-#~ "Campo tecnico usato per gestire allegati multipli in un ambiente "
-#~ "multisito."
-
-#~ msgid "Theme Template"
-#~ msgstr "Modello del tema"
-
 #~ msgid "Thumbnail"
 #~ msgstr "Anteprima"
 
@@ -1036,12 +1058,6 @@ msgstr "il"
 
 #~ msgid "VAT number and fiscal code are not set for %s."
 #~ msgstr "Partita IVA e codice fiscale non impostati per %s."
-
-#~ msgid "Website"
-#~ msgstr "Sito web"
-
-#~ msgid "Website URL"
-#~ msgstr "URL sito web"
 
 #~ msgid "ZIP is not set for %s."
 #~ msgstr "CAP non impostato per %s."
