@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-04-09 12:26+0000\n"
-"PO-Revision-Date: 2023-09-20 06:33+0000\n"
+"PO-Revision-Date: 2023-12-19 15:36+0000\n"
 "Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -583,7 +583,7 @@ msgstr "Contenuto file (raw)"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__file_size
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachments__file_size
 msgid "File Size"
-msgstr "Nome file"
+msgstr "Dimensione file"
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_company__fatturapa_fiscal_position_id
@@ -675,7 +675,6 @@ msgstr "Se selezionata, nuovi messaggi richiedono attenzione."
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,help:l10n_it_fatturapa.field_fatturapa_attachment__message_has_error
-#: model:ir.model.fields,help:l10n_it_fatturapa.field_fatturapa_attachment__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
 msgstr "Se selezionata, alcuni messaggi hanno un errore di consegna."
 
@@ -796,7 +795,7 @@ msgstr "Movimento contabile"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__key
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachments__key
 msgid "Key"
-msgstr ""
+msgstr "Chiave"
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_account_move____last_update
@@ -1044,7 +1043,7 @@ msgstr "CAP organizzazione"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__original_id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachments__original_id
 msgid "Original (unoptimized, unresized) attachment"
-msgstr "Allegato originale (non ottimizzato o ridimensionato)"
+msgstr "Allegato originale (non ottimizzato, non ridimensionato)"
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_partner__pa_partner_code
@@ -1391,11 +1390,6 @@ msgid "Rounding"
 msgstr "Arrotondamento"
 
 #. module: l10n_it_fatturapa
-#: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__message_has_sms_error
-msgid "SMS Delivery error"
-msgstr "Errore consegna SMS"
-
-#. module: l10n_it_fatturapa
 #: model:ir.model,name:l10n_it_fatturapa.model_fatturapa_attachment
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa.fatturapa_attachment_view_form
 msgid "SdI file"
@@ -1490,6 +1484,7 @@ msgid ""
 "Technical field used to resolve multiple attachments in a multi-website "
 "environment."
 msgstr ""
+"Campo tecnico usato per gestire allegati multipli in un ambiente multisito."
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,help:l10n_it_fatturapa.field_res_partner__codice_destinatario
@@ -1552,7 +1547,7 @@ msgstr "L'ID del record a cui questo è collegato."
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__theme_template_id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachments__theme_template_id
 msgid "Theme Template"
-msgstr ""
+msgstr "Modello del tema"
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_company__fatturapa_sender_partner
@@ -1644,7 +1639,7 @@ msgstr "Immatricolazione veicolo"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__website_id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachments__website_id
 msgid "Website"
-msgstr ""
+msgstr "Sito web"
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__website_message_ids
@@ -1655,7 +1650,7 @@ msgstr "Messaggi sito web"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__website_url
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachments__website_url
 msgid "Website URL"
-msgstr ""
+msgstr "URL sito web"
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,help:l10n_it_fatturapa.field_fatturapa_attachment__website_message_ids
@@ -1721,8 +1716,8 @@ msgid ""
 "You can either upload a file from your computer or copy/paste an internet "
 "link to your file."
 msgstr ""
-"Puoi caricare un file dal tuo computer o copiare/incollare un link al tuo "
-"file."
+"È possibile caricare un file dal computer oppure fare copia/incolla di un "
+"collegamento Internet al file."
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,help:l10n_it_fatturapa.field_account_bank_statement_line__efatt_stabile_organizzazione_cap
@@ -1735,6 +1730,9 @@ msgstr "CAP"
 #: model_terms:ir.ui.view,arch_db:l10n_it_fatturapa.fatturapa_attachment_view_form
 msgid "on"
 msgstr "il"
+
+#~ msgid "SMS Delivery error"
+#~ msgstr "Errore consegna SMS"
 
 #~ msgid "Preview Format Style"
 #~ msgstr "Stile formato di anteprima"

@@ -85,7 +85,7 @@ class SdiChannel(models.Model):
             company = self.env["res.company"].browse(company_id)
             e_invoice_user = company.e_invoice_user_id
             if e_invoice_user:
-                attachment_model = attachment_model.sudo(e_invoice_user.id)
+                attachment_model = attachment_model.with_user(e_invoice_user)
         existing_attachments = attachment_model.search(
             [
                 ("name", "=", file_name),
@@ -164,9 +164,9 @@ class SdiChannel(models.Model):
         it can be added in `default_values`.
 
         :param file_name_content_dict: Dictionary mapping
-            file names to their base64-encoded content for each Electronic Bill.
+            file names to their content for each Electronic Bill.
         :param metadata_file_name_content_dict: Dictionary mapping
-            file names to their base64-encoded content for each Metadata file.
+            file names to their content for each Metadata file.
         :param default_values: Default values
             for the creation of Electronic Bill.
         :return: the created Electronic Bills (`fatturapa.attachment.in`).
@@ -189,7 +189,7 @@ class SdiChannel(models.Model):
             company = self.env["res.company"].browse(company_id)
             e_invoice_user = company.e_invoice_user_id
             if e_invoice_user:
-                attachment_model = attachment_model.sudo(e_invoice_user.id)
+                attachment_model = attachment_model.with_user(e_invoice_user)
 
         attachments = attachment_model.create(all_attachments_values)
         for attachment in attachments:

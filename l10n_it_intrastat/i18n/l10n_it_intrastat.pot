@@ -9783,11 +9783,6 @@ msgid "Code Type"
 msgstr ""
 
 #. module: l10n_it_intrastat
-#: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_tree_report_intrastat_code
-msgid "Codes"
-msgstr ""
-
-#. module: l10n_it_intrastat
 #: model:report.intrastat.code,description:l10n_it_intrastat.intrastat_category_2014_09011100
 msgid "Coffee (excl. roasted and decaffeinated)"
 msgstr ""
@@ -12507,7 +12502,6 @@ msgstr ""
 
 #. module: l10n_it_intrastat
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_custom_view_form
-#: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_custom_view_tree
 msgid "Customs Section"
 msgstr ""
 
@@ -41977,6 +41971,9 @@ msgid "Origin"
 msgstr ""
 
 #. module: l10n_it_intrastat
+#: model:ir.model.fields,field_description:l10n_it_intrastat.field_product_category__intrastat_country_origin_id
+#: model:ir.model.fields,field_description:l10n_it_intrastat.field_product_product__intrastat_country_origin_id
+#: model:ir.model.fields,field_description:l10n_it_intrastat.field_product_template__intrastat_country_origin_id
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_res_company__intrastat_sale_country_origin_id
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_intrastat_company_form
 msgid "Origin Country"
@@ -65189,7 +65186,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_account_invoice_intrastat__transaction_nature_id
 #: model:ir.ui.menu,name:l10n_it_intrastat.menu_account_transaction_nature
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_transaction_nature_view_form
-#: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_transaction_nature_view_tree
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_intrastat_company_form
 msgid "Transaction Nature"
 msgstr ""
@@ -65200,7 +65196,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_account_invoice_intrastat__transaction_nature_b_id
 #: model:ir.ui.menu,name:l10n_it_intrastat.menu_account_transaction_nature_b
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_transaction_nature_b_view_form
-#: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_transaction_nature_b_view_tree
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_intrastat_company_form
 msgid "Transaction Nature B"
 msgstr ""
@@ -65353,7 +65348,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_it_intrastat.field_account_invoice_intrastat__transport_code_id
 #: model:ir.ui.menu,name:l10n_it_intrastat.menu_account_intrastat_transport
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_transport_view_form
-#: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.account_intrastat_transport_view_tree
 #: model_terms:ir.ui.view,arch_db:l10n_it_intrastat.view_intrastat_company_form
 msgid "Transport Mode"
 msgstr ""

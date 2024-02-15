@@ -21,9 +21,9 @@ class StockDeliveryNoteCreateWizard(models.TransientModel):
         picking_ids = self.env["stock.picking"].browse(active_ids)
         if picking_ids:
             type_code = picking_ids[0].picking_type_id.code
-
+            company_id = picking_ids[0].company_id
             return self.env["stock.delivery.note.type"].search(
-                [("code", "=", type_code)], limit=1
+                [("code", "=", type_code), ("company_id", "=", company_id.id)], limit=1
             )
 
         else:
@@ -74,6 +74,49 @@ class StockDeliveryNoteCreateWizard(models.TransientModel):
             }
         )
 
+    def _prepare_delivery_note_vals(self, sale_order_id):
+        delivery_method_id = self.selected_picking_ids.mapped("carrier_id")[:1]
+        return {
+            "company_id": (
+                self.selected_picking_ids.mapped("company_id")[:1].id or False
+            ),
+            "partner_sender_id": self.partner_sender_id.id,
+            "partner_id": (
+                self.selected_picking_ids.mapped("sale_id.partner_id").id
+                if self.selected_picking_ids.mapped("sale_id.partner_id").id
+                else self.partner_id.id
+            ),
+            "partner_shipping_id": self.partner_shipping_id.id,
+            "type_id": self.type_id.id,
+            "date": self.date,
+            "carrier_id": delivery_method_id.partner_id.id,
+            "delivery_method_id": delivery_method_id.id,
+            "transport_condition_id": (
+                sale_order_id
+                and sale_order_id.default_transport_condition_id.id
+                or self.partner_id.default_transport_condition_id.id
+                or self.type_id.default_transport_condition_id.id
+            ),
+            "goods_appearance_id": (
+                sale_order_id
+                and sale_order_id.default_goods_appearance_id.id
+                or self.partner_id.default_goods_appearance_id.id
+                or self.type_id.default_goods_appearance_id.id
+            ),
+            "transport_reason_id": (
+                sale_order_id
+                and sale_order_id.default_transport_reason_id.id
+                or self.partner_id.default_transport_reason_id.id
+                or self.type_id.default_transport_reason_id.id
+            ),
+            "transport_method_id": (
+                sale_order_id
+                and sale_order_id.default_transport_method_id.id
+                or self.partner_id.default_transport_method_id.id
+                or self.type_id.default_transport_method_id.id
+            ),
+        }
+
     def confirm(self):
         self.check_compliance(self.selected_picking_ids)
 
@@ -81,32 +124,7 @@ class StockDeliveryNoteCreateWizard(models.TransientModel):
         sale_order_id = sale_order_ids and sale_order_ids[0] or self.env["sale.order"]
 
         delivery_note = self.env["stock.delivery.note"].create(
-            {
-                "partner_sender_id": self.partner_sender_id.id,
-                "partner_id": self.selected_picking_ids.mapped("sale_id.partner_id").id
-                if self.selected_picking_ids.mapped("sale_id.partner_id").id
-                else self.partner_id.id,
-                "partner_shipping_id": self.partner_shipping_id.id,
-                "type_id": self.type_id.id,
-                "date": self.date,
-                "delivery_method_id": self.partner_id.property_delivery_carrier_id.id,
-                "transport_condition_id": sale_order_id
-                and sale_order_id.default_transport_condition_id.id
-                or self.partner_id.default_transport_condition_id.id
-                or self.type_id.default_transport_condition_id.id,
-                "goods_appearance_id": sale_order_id
-                and sale_order_id.default_goods_appearance_id.id
-                or self.partner_id.default_goods_appearance_id.id
-                or self.type_id.default_goods_appearance_id.id,
-                "transport_reason_id": sale_order_id
-                and sale_order_id.default_transport_reason_id.id
-                or self.partner_id.default_transport_reason_id.id
-                or self.type_id.default_transport_reason_id.id,
-                "transport_method_id": sale_order_id
-                and sale_order_id.default_transport_method_id.id
-                or self.partner_id.default_transport_method_id.id
-                or self.type_id.default_transport_method_id.id,
-            }
+            self._prepare_delivery_note_vals(sale_order_id)
         )
 
         self.selected_picking_ids.write({"delivery_note_id": delivery_note.id})

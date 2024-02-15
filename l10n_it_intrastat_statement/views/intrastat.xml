@@ -8,7 +8,7 @@
             <field name="model">account.intrastat.statement</field>
             <field name="arch" type="xml">
 
-                <tree string="INTRASTAT Statement">
+                <tree>
                     <field name="number" />
                     <field name="date" />
                     <field name="sale" />
@@ -282,15 +282,15 @@
             <field name="model">account.intrastat.statement.sale.section1</field>
             <field name="arch" type="xml">
                 <tree>
-                   <field name="sequence" />
-                   <field name="invoice_id" />
-                   <field name="partner_id" string="Buyer" />
-                   <field name="country_partner_id" string="Buyer State" />
-                   <field name="intrastat_code_id" string="Goods Code" />
-                   <field name="weight_kg" />
-                   <field name="country_destination_id" />
-                   <field name="province_origin_id" />
-                   <field name="amount_euro" sum="Total" />
+                    <field name="sequence" />
+                    <field name="invoice_id" />
+                    <field name="partner_id" string="Buyer" />
+                    <field name="country_partner_id" string="Buyer State" />
+                    <field name="intrastat_code_id" string="Goods Code" />
+                    <field name="weight_kg" />
+                    <field name="country_destination_id" />
+                    <field name="province_origin_id" />
+                    <field name="amount_euro" sum="Total" />
                </tree>
             </field>
         </record>
@@ -315,6 +315,7 @@
                         />
                         </group>
                         <group>
+                            <field name="sequence" />
                             <field name="transaction_nature_id" required="1" />
                             <field name="transaction_nature_b_id" />
                         </group>
@@ -355,16 +356,17 @@
             <field name="model">account.intrastat.statement.sale.section2</field>
             <field name="arch" type="xml">
                 <tree>
-                   <field name="sequence" />
-                   <field name="year_id" />
-                   <field name="quarterly" />
-                   <field name="month" />
-                   <field name="country_partner_id" string="Buyer State" />
-                   <field name="partner_id" string="Buyer" />
-                   <field name="vat_code" string="Buyer VAT Code" />
-                   <field name="intrastat_code_id" string="Goods Code" />
-                   <field name="sign_variation" />
-                   <field name="amount_euro" sum="Total" />
+                    <field name="sequence" />
+                    <field name="invoice_id" />
+                    <field name="year_id" />
+                    <field name="quarterly" />
+                    <field name="month" />
+                    <field name="country_partner_id" string="Buyer State" />
+                    <field name="partner_id" string="Buyer" />
+                    <field name="vat_code" string="Buyer VAT Code" />
+                    <field name="intrastat_code_id" string="Goods Code" />
+                    <field name="sign_variation" />
+                    <field name="amount_euro" sum="Total" />
                 </tree>
             </field>
         </record>
@@ -388,6 +390,7 @@
                         />
                         </group>
                         <group>
+                            <field name="sequence" />
                             <field name="transaction_nature_id" required="1" />
                         </group>
                     </group>
@@ -451,6 +454,7 @@
                         />
                         </group>
                         <group>
+                            <field name="sequence" />
                         </group>
                     </group>
                     <newline />
@@ -519,6 +523,7 @@
                         />
                         </group>
                         <group>
+                            <field name="sequence" />
                             <field name="intrastat_custom_id" required="1" />
                             <field name="year_id" required="1" />
                             <field name="protocol" required="1" options="{'size': 6}" />
@@ -590,6 +595,7 @@
                         />
                         </group>
                         <group>
+                            <field name="sequence" />
                             <field name="transaction_nature_id" required="1" />
                             <field name="transaction_nature_b_id" />
                         </group>
@@ -665,6 +671,7 @@
                         />
                         </group>
                         <group>
+                            <field name="sequence" />
                             <field name="transaction_nature_id" required="1" />
                         </group>
                     </group>
@@ -721,6 +728,7 @@
                             <field name="vat_code" string="Supplier VAT Code" />
                         </group>
                         <group>
+                            <field name="sequence" />
                         </group>
                     </group>
                     <newline />
@@ -781,6 +789,7 @@
                         />
                         </group>
                         <group>
+                            <field name="sequence" />
                             <field name="intrastat_custom_id" required="1" />
                             <field name="year_id" required="1" />
                             <field name="protocol" required="1" options="{'size': 6}" />
@@ -817,7 +826,7 @@
             <field name="name">account.intrastat.custom.view.tree</field>
             <field name="model">account.intrastat.custom</field>
             <field name="arch" type="xml">
-                <tree string="Customs Section">
+                <tree>
                     <field name="code" />
                     <field name="name" />
                     <field name="date_start" />
