@@ -6,7 +6,7 @@
 
 {
     "name": "ITA - Fattura elettronica - Base",
-    "version": "14.0.1.0.2",
+    "version": "14.0.2.2.1",
     "category": "Localization/Italy",
     "summary": "Fatture elettroniche",
     "author": "Davide Corio, Agile Business Group, Innoviu, "
@@ -32,6 +32,7 @@
         "views/account_view.xml",
         "views/company_view.xml",
         "views/partner_view.xml",
+        "views/fatturapa_attachment_views.xml",
         "views/related_document_type_views.xml",
         "security/ir.model.access.csv",
     ],
@@ -40,5 +41,5 @@
     "external_dependencies": {
         "python": ["asn1crypto"],
     },
-    "development_status": "Alpha",
+    "development_status": "Beta",
 }

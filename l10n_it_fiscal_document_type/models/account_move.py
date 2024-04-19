@@ -7,17 +7,25 @@ class AccountMove(models.Model):
     @api.depends("partner_id", "journal_id", "move_type", "fiscal_position_id")
     def _compute_set_document_fiscal_type(self):
         for invoice in self:
+            # Edit only draft invoices
+            # or invoices that do not have a document type
             if invoice.state != "draft" and invoice.fiscal_document_type_id:
                 continue
-            invoice.fiscal_document_type_id = False
-            dt = invoice._get_document_fiscal_type(
+
+            # If there is already a fitting document type, do not change it
+            accepted_document_type_ids = invoice._get_document_fiscal_type(
                 invoice.move_type,
                 invoice.partner_id,
                 invoice.fiscal_position_id,
                 invoice.journal_id,
             )
-            if dt:
-                invoice.fiscal_document_type_id = dt[0]
+            if invoice.fiscal_document_type_id.id in accepted_document_type_ids:
+                continue
+
+            document_type = False
+            if accepted_document_type_ids:
+                document_type = accepted_document_type_ids[0]
+            invoice.fiscal_document_type_id = document_type
 
     def _get_document_fiscal_type(
         self, move_type=None, partner=None, fiscal_position=None, journal=None
@@ -49,6 +57,21 @@ class AccountMove(models.Model):
             and move_type in ["out_invoice", "out_refund", "in_invoice", "in_refund"]
         ):
             dt = self.env["fiscal.document.type"].search([(move_type, "=", True)]).ids
+
+        # Refund Document type
+        if (dt or doc_id) and "refund" in move_type:
+            fdt = self.env["fiscal.document.type"].browse(doc_id or dt[0])
+            if (
+                fdt
+                and not fdt.out_refund
+                and not fdt.in_refund
+                and fdt.refund_fiscal_document_type_id
+            ):
+                if dt:
+                    dt[0] = fdt.refund_fiscal_document_type_id.id
+                else:
+                    dt.append(fdt.refund_fiscal_document_type_id.id)
+
         if doc_id:
             dt.append(doc_id)
         return dt
@@ -60,3 +83,10 @@ class AccountMove(models.Model):
         store=True,
         readonly=False,
     )
+
+    def _reverse_move_vals(self, default_values, cancel=True):
+        vals = super()._reverse_move_vals(default_values, cancel)
+        # when reversing a move, fiscal_document_type_id should be recomputed, not copied
+        if "fiscal_document_type_id" in vals:
+            del vals["fiscal_document_type_id"]
+        return vals

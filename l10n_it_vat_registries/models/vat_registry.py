@@ -62,7 +62,6 @@ class ReportRegistroIva(models.AbstractModel):
         res = {}
 
         for move_line in move_lines:
-            set_cee_absolute_value = False
             if not (move_line.tax_line_id or move_line.tax_ids):
                 continue
 
@@ -77,14 +76,6 @@ class ReportRegistroIva(models.AbstractModel):
             else:
                 tax = move_line.tax_line_id
                 is_base = False
-
-            if (registry_type == "customer" and tax.cee_type == "sale") or (
-                registry_type == "supplier" and tax.cee_type == "purchase"
-            ):
-                set_cee_absolute_value = True
-
-            elif tax.cee_type:
-                continue
 
             if tax.parent_tax_ids and len(tax.parent_tax_ids) == 1:
                 # we group by main tax
@@ -101,8 +92,6 @@ class ReportRegistroIva(models.AbstractModel):
                 }
             tax_amount = move_line.debit - move_line.credit
 
-            if set_cee_absolute_value:
-                tax_amount = abs(tax_amount)
             if (
                 "receivable" in move.financial_type
                 or "payable_refund" == move.financial_type
@@ -160,8 +149,8 @@ class ReportRegistroIva(models.AbstractModel):
                 "tax": amounts_by_tax_id[tax_id]["tax"],
                 "index": index,
                 "invoice_type": invoice_type,
-                "invoice_date": (move and move.invoice_date or move.date or ""),
-                "reference": (move and move.name or ""),
+                "invoice_date": (move.invoice_date or move.date or ""),
+                "reference": (move.ref or move.name or ""),
                 # These 4 items are added to make the dictionary more usable
                 # in further customizations, allowing inheriting modules to
                 # retrieve the records that have been used to create the
@@ -193,7 +182,7 @@ class ReportRegistroIva(models.AbstractModel):
         if receivable_payable_found:
             total = abs(total)
         else:
-            total = abs(move.amount)
+            total = abs(move.amount_total)
         if "refund" in move.move_type:
             total = -total
         return total

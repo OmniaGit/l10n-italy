@@ -1,3 +1,6 @@
+#  Copyright 2022 Simone Rubino - TAKOBI
+#  License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+
 import base64
 import binascii
 import logging
@@ -6,8 +9,8 @@ from io import BytesIO
 
 import lxml.etree as ET
 
-from odoo import fields, models
-from odoo.exceptions import UserError
+from odoo import api, fields, models
+from odoo.exceptions import UserError, ValidationError
 from odoo.modules import get_resource_path
 from odoo.tools.translate import _
 
@@ -19,7 +22,7 @@ except (ImportError, IOError) as err:
     _logger.debug(err)
 
 
-re_base64 = re.compile(br"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+re_base64 = re.compile(rb"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 
 
 def is_base64(s):
@@ -28,9 +31,28 @@ def is_base64(s):
     return re_base64.match(s)
 
 
-class Attachment(models.Model):
-    _inherit = "ir.attachment"
+class FatturaPAAttachment(models.AbstractModel):
+    _name = "fatturapa.attachment"
+    _description = "SdI file"
+    _inherits = {
+        "ir.attachment": "ir_attachment_id",
+    }
+    _inherit = [
+        "mail.thread",
+    ]
+    _order = "id desc"
 
+    ir_attachment_id = fields.Many2one(
+        comodel_name="ir.attachment",
+        string="Attachment",
+        required=True,
+        ondelete="cascade",
+    )
+    att_name = fields.Char(
+        string="SdI file name",
+        related="ir_attachment_id.name",
+        store=True,
+    )
     ftpa_preview_link = fields.Char(
         "Preview link", readonly=True, compute="_compute_ftpa_preview_link"
     )
@@ -38,9 +60,19 @@ class Attachment(models.Model):
     def _compute_ftpa_preview_link(self):
         for att in self:
             att.ftpa_preview_link = (
-                att.get_base_url() + "/fatturapa/preview/%s" % att.id
+                att.get_base_url() + "/fatturapa/preview/%s" % att.ir_attachment_id.id
             )
 
+    @staticmethod
+    def ftpa_preview(self):
+        return {
+            "type": "ir.actions.act_url",
+            "name": "Show preview",
+            "url": self.ftpa_preview_link,
+            "target": "new",
+        }
+
+    @api.model
     def remove_xades_sign(self, xml):
         # Recovering parser is needed for files where strings like
         # xmlns:ds="http://www.w3.org/2000/09/xmldsig#&quot;"
@@ -54,8 +86,11 @@ class Attachment(models.Model):
             if elem.tag.find("Signature") > -1:
                 elem.getparent().remove(elem)
                 break
+            if any(" " in elem.nsmap[tag] for tag in elem.nsmap):
+                ET.cleanup_namespaces(elem)
         return ET.tostring(root)
 
+    @api.model
     def strip_xml_content(self, xml):
         recovering_parser = ET.XMLParser(recover=True)
         root = ET.XML(xml, parser=recovering_parser)
@@ -66,14 +101,18 @@ class Attachment(models.Model):
         info = cms.ContentInfo.load(data)
         return info["content"]["encap_content_info"]["content"].native
 
+    @api.model
     def cleanup_xml(self, xml_string):
         xml_string = self.remove_xades_sign(xml_string)
         xml_string = self.strip_xml_content(xml_string)
         return xml_string
 
-    def get_xml_string(self):
+    def get_xml_string(self, attachment=None):
+        if not attachment:
+            self.ensure_one()
+            attachment = self.ir_attachment_id
         try:
-            data = base64.b64decode(self.datas)
+            data = base64.b64decode(attachment.datas)
         except binascii.Error as e:
             raise UserError(_("Corrupted attachment %s.") % e.args)
 
@@ -103,17 +142,28 @@ class Attachment(models.Model):
         except AttributeError as e:
             raise UserError(_("Invalid xml %s.") % e.args)
 
-    def get_fattura_elettronica_preview(self):
-        xsl_path = get_resource_path(
-            "l10n_it_fatturapa",
-            "data",
-            self.env.company.fatturapa_preview_style,
-        )
-        xslt = ET.parse(xsl_path)
-        xml_string = self.get_xml_string()
+    @api.model
+    def get_fattura_elettronica_preview(self, attachment):
+        xml_string = self.get_xml_string(attachment)
         xml_file = BytesIO(xml_string)
         recovering_parser = ET.XMLParser(recover=True)
         dom = ET.parse(xml_file, parser=recovering_parser)
+
+        # identify the schema to use by looking at the root element tag
+        root = dom.getroot()
+        index = root.tag.rfind("}") + 1
+        root_tag = root.tag[index:]
+
+        company = self.env.user.company_id
+        if root_tag == "FatturaElettronicaSemplificata":
+            preview_style = company.fatturapa_simple_preview_style
+        elif root_tag == "FatturaElettronica":
+            preview_style = company.fatturapa_preview_style
+        else:
+            raise ValidationError(_("Unexpected root element: %s", root_tag))
+
+        xsl_path = get_resource_path("l10n_it_fatturapa", "data", preview_style)
+        xslt = ET.parse(xsl_path)
         transform = ET.XSLT(xslt)
         newdom = transform(dom)
         return ET.tostring(newdom, pretty_print=True)

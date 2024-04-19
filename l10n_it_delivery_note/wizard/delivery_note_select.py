@@ -1,7 +1,7 @@
 # Copyright (c) 2019, Link IT Europe Srl
 # @author: Matteo Bilotta <mbilotta@linkeurope.it>
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 
 class StockDeliveryNoteSelectWizard(models.TransientModel):
@@ -37,6 +37,19 @@ class StockDeliveryNoteSelectWizard(models.TransientModel):
             self.picking_ids += self.selected_picking_ids
         else:
             self.picking_ids = self.picking_ids
+        self.warning_message = self._get_warning_message()
+
+    def _get_warning_message(self):
+        res = super()._get_warning_message()
+        carrier_ids = self.picking_ids.mapped("carrier_id")
+        if len(carrier_ids.mapped("partner_id")) > 1:
+            res = _(
+                "The selected pickings have different delivery methods: %(carriers)s",
+                carriers=", ".join(
+                    '"%s: %s"' % (i.name, i.partner_id.name) for i in carrier_ids
+                ),
+            )
+        return res
 
     def check_compliance(self, pickings):
         super().check_compliance(pickings)
@@ -46,6 +59,11 @@ class StockDeliveryNoteSelectWizard(models.TransientModel):
     def confirm(self):
         self.check_compliance(self.picking_ids)
         self.selected_picking_ids.write({"delivery_note_id": self.delivery_note_id.id})
+
+        sale_order_ids = self.selected_picking_ids.sale_id
+        sale_order_id = sale_order_ids and sale_order_ids[0] or self.env["sale.order"]
+        if sale_order_id:
+            sale_order_id._assign_delivery_notes_invoices(sale_order_id.invoice_ids)
 
         if self.user_has_groups("l10n_it_delivery_note.use_advanced_delivery_notes"):
             return self.delivery_note_id.goto()

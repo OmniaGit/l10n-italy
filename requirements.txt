@@ -1,3 +1,9 @@
 # generated from manifests external_dependencies
 asn1crypto
 codicefiscale
+elementpath
+openupgradelib
+unidecode
+xlrd
+xlsxwriter
+xmlschema>=1.7.0

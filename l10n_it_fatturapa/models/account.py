@@ -34,6 +34,7 @@ class FatturapaPaymentDetail(models.Model):
     # _position = ['2.4.2']
     _name = "fatturapa.payment.detail"
     _description = "E-invoice payment details"
+    _rec_name = "payment_due_date"
     recipient = fields.Char("Recipient", size=200)
     fatturapa_pm_id = fields.Many2one(
         "fatturapa.payment_method", string="Electronic Invoice Payment Method"
@@ -87,7 +88,7 @@ class WelfareFundType(models.Model):
     def name_get(self):
         res = []
         for record in self:
-            res.append((record.id, u"[{}] {}".format(record.name, record.description)))
+            res.append((record.id, "[{}] {}".format(record.name, record.description)))
         return res
 
 
@@ -194,6 +195,9 @@ class FatturapaRelatedDocumentType(models.Model):
             line = line_obj.browse(vals["invoice_line_id"])
             vals["lineRef"] = line.sequence
         return super(FatturapaRelatedDocumentType, self).create(vals)
+
+    def setlineRef(self, n):
+        self.lineRef = n
 
 
 class FatturapaActivityProgress(models.Model):

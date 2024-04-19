@@ -15,6 +15,9 @@ class StockDeliveryNoteBaseWizard(models.AbstractModel):
 
         return self.env["stock.picking"].browse(active_ids)
 
+    def _domain_type_id(self):
+        return [("company_id", "in", [False, self.env.company.id])]
+
     selected_picking_ids = fields.Many2many(
         "stock.picking", default=_default_stock_pickings, readonly=True
     )
@@ -25,12 +28,19 @@ class StockDeliveryNoteBaseWizard(models.AbstractModel):
     partner_id = fields.Many2one(
         "res.partner", string="Recipient", compute="_compute_fields"
     )
-    partner_shipping_id = fields.Many2one("res.partner", string="Shipping address")
+    partner_shipping_id = fields.Many2one(
+        "res.partner", string="Shipping address", compute="_compute_fields"
+    )
 
     date = fields.Date(string="Date")
-    type_id = fields.Many2one("stock.delivery.note.type", string="Type")
+    type_id = fields.Many2one(
+        "stock.delivery.note.type",
+        string="Type",
+        domain=_domain_type_id,
+    )
 
     error_message = fields.Html(compute="_compute_fields")
+    warning_message = fields.Char("Warning", readonly=True, compute="_compute_fields")
 
     def _get_validation_errors(self, pickings):
         validators = [
@@ -56,12 +66,23 @@ class StockDeliveryNoteBaseWizard(models.AbstractModel):
 
         return errors
 
+    def _get_warning_message(self):
+        """
+        This method is used to be inherited and extended
+        to display whatever message could be used to improve the
+        user experience when creating a delivery note
+
+        :return: message to be displayed
+        """
+        return False
+
     @api.depends("selected_picking_ids")
     def _compute_fields(self):
         try:
             self.error_message = False
             self.partner_sender_id = False
             self.partner_id = False
+            self.partner_shipping_id = False
             self.check_compliance(self.selected_picking_ids)
 
         except ValidationError:
@@ -77,9 +98,11 @@ class StockDeliveryNoteBaseWizard(models.AbstractModel):
             )
 
         else:
+            self.warning_message = self._get_warning_message()
             partners = self.selected_picking_ids.get_partners()
             self.partner_sender_id = partners[0]
-            self.partner_id = partners[1]
+            self.partner_shipping_id = partners[1]
+            self.partner_id = partners[2]
 
     def confirm(self):
         raise NotImplementedError(

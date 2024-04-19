@@ -1,114 +1,13 @@
 from datetime import datetime, timedelta
 
-from odoo.tests import Form
-from odoo.tests.common import TransactionCase
+from odoo.tests import new_test_user
+from odoo.tests.common import Form
 
-DOWNPAYMENT_METHODS = ["fixed", "percentage"]
+from ..models.stock_delivery_note import DATE_FORMAT
+from .delivery_note_common import StockDeliveryNoteCommon
 
 
-class StockDeliveryNoteInvoicingTest(TransactionCase):
-    at_install = False
-    post_install = True
-
-    sender = None
-    recipient = None
-
-    desk_combination_line = None
-    customizable_desk_line = None
-    right_corner_desk_line = None
-    large_cabinet_line = None
-    storage_box_line = None
-    large_desk_line = None
-
-    def create_partner(self, name, **kwargs):
-        return self.env["res.partner"].create({"name": name, **kwargs})
-
-    def create_sales_order(self, lines, **kwargs):
-        vals = {"partner_id": self.recipient.id}
-
-        if lines:
-            vals["order_line"] = lines
-
-        vals.update(kwargs)
-
-        return self.env["sale.order"].create(vals)
-
-    def prepare_sales_order_line(self, product, quantity=1.0, price=None, **kwargs):
-        vals = {"product_id": product.id, "product_uom_qty": quantity}
-
-        if price:
-            vals["price_unit"] = price
-
-        vals.update(kwargs)
-
-        return 0, False, vals
-
-    def add_downpayment_line(self, sales_order, method, amount, **kwargs):
-        if method not in DOWNPAYMENT_METHODS:
-            raise ValueError("Downpayment method must be 'fixed' or 'percentage'.")
-
-        return (
-            self.env["sale.advance.payment.inv"]
-            .with_context(active_ids=sales_order.ids)
-            .create({"advance_payment_method": method, "amount": amount, **kwargs})
-            .create_invoices()
-        )
-
-    def create_delivery_note(self, **kwargs):
-        vals = {
-            "partner_sender_id": self.sender.id,
-            "partner_id": self.recipient.id,
-            "partner_shipping_id": self.recipient.id,
-        }
-
-        vals.update(kwargs)
-
-        return self.env["stock.delivery.note"].create(vals)
-
-    def setUp(self):
-        super().setUp()
-
-        self.env.user.write(
-            {
-                "groups_id": [
-                    (
-                        4,
-                        self.env.ref(
-                            "l10n_it_delivery_note.use_advanced_delivery_notes"
-                        ).id,
-                    )
-                ]
-            }
-        )
-
-        self.sender = self.env.ref("base.main_partner")
-        self.recipient = self.create_partner("Mario Rossi")
-
-        try:
-            self.desk_combination_line = self.prepare_sales_order_line(
-                self.env.ref("product.product_product_3"), 1
-            )
-            self.customizable_desk_line = self.prepare_sales_order_line(
-                self.env.ref("product.product_product_4"), 3
-            )
-            self.right_corner_desk_line = self.prepare_sales_order_line(
-                self.env.ref("product.product_product_5"), 2
-            )
-            self.large_cabinet_line = self.prepare_sales_order_line(
-                self.env.ref("product.product_product_6"), 11
-            )
-            self.storage_box_line = self.prepare_sales_order_line(
-                self.env.ref("product.product_product_7"), 5
-            )
-            self.large_desk_line = self.prepare_sales_order_line(
-                self.env.ref("product.product_product_8"), 1
-            )
-
-        except ValueError as exc:
-            raise RuntimeError(
-                "It seems you're not using a database with"
-                " demonstration data loaded for this tests."
-            ) from exc
+class StockDeliveryNoteInvoicingTest(StockDeliveryNoteCommon):
 
     # ⇒ "Ordine singolo: fatturazione completa"
     def test_complete_invoicing_single_so(self):
@@ -179,7 +78,7 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         # in sale.advance.payment.inv the method create_invoices uses the field
         # deduct_down_payments (default True) that includes selection lines:
         # so 4 product lines, 1 ddt note, 1 down_payment and 1 selection line
-        self.assertEqual(len(final_invoice.invoice_line_ids), 10)
+        self.assertEqual(len(final_invoice.invoice_line_ids), 7)
         self.assertEqual(final_invoice.delivery_note_ids, delivery_note)
 
         self.assertEqual(delivery_note.invoice_ids, final_invoice)
@@ -307,30 +206,6 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(invoice_line.quantity, 0)
         self.assertEqual(invoice_line.delivery_note_id, delivery_note)
 
-        #
-        # Fattura - Linea 8 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[7]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
-        #
-        # Fattura - Linea 9 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[8]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
-        #
-        # Fattura - Linea 10 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[9]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
     # ⇒ "Ordine singolo: fatturazione parziale"
     def test_partial_invoicing_single_so(self):
         #
@@ -398,7 +273,7 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(first_delivery_note.state, "confirm")
         self.assertEqual(first_delivery_note.invoice_status, "to invoice")
 
-        sales_order._create_invoices(final=False)
+        sales_order._create_invoices()
 
         self.assertEqual(len(sales_order.order_line), 5)
         self.assertEqual(sales_order.invoice_status, "no")
@@ -407,7 +282,7 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(len(invoices), 2)
 
         partial_invoice = invoices[0]
-        self.assertEqual(len(partial_invoice.invoice_line_ids), 8)
+        self.assertEqual(len(partial_invoice.invoice_line_ids), 5)
         self.assertEqual(partial_invoice.delivery_note_ids, first_delivery_note)
 
         self.assertEqual(len(first_delivery_note.line_ids), 4)
@@ -537,30 +412,6 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
 
         #
-        # Fattura - Linea 6 (DdT in fattura)
-        #
-        invoice_line = partial_invoice.invoice_line_ids[5]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
-
-        #
-        # Fattura - Linea 7 (DdT in fattura)
-        #
-        invoice_line = partial_invoice.invoice_line_ids[6]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
-
-        #
-        # Fattura - Linea 8 (DdT in fattura)
-        #
-        invoice_line = partial_invoice.invoice_line_ids[7]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
-
-        #
         # =      =  -  =    = - =    =  -  =      =
         #
 
@@ -576,7 +427,7 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(len(invoices), 3)
 
         final_invoice = invoices[1]
-        self.assertEqual(len(final_invoice.invoice_line_ids), 8)
+        self.assertEqual(len(final_invoice.invoice_line_ids), 6)
         self.assertEqual(final_invoice.delivery_note_ids, second_delivery_note)
 
         self.assertEqual(second_delivery_note.invoice_ids, final_invoice)
@@ -683,22 +534,6 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(invoice_line.quantity, 0)
         self.assertEqual(invoice_line.delivery_note_id, second_delivery_note)
 
-        #
-        # Fattura - Linea 7 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[6]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, second_delivery_note)
-
-        #
-        # Fattura - Linea 8 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[7]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, second_delivery_note)
-
     # ⇒ "Ordini multipli: fatturazione completa"
     def test_complete_invoicing_multiple_so(self):
         #
@@ -708,6 +543,11 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         #        ┌ Picking ┘
         #     SO ┘
         #
+
+        # Activate advanced setting to allow more picking in one DN
+        self.env["ir.config_parameter"].sudo().set_param(
+            "l10n_it_delivery_note.group_use_advanced_delivery_notes", True
+        )
 
         first_sales_order = self.create_sales_order(
             [
@@ -799,7 +639,7 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(len(invoices), 2)
 
         final_invoice = invoices[0]
-        self.assertEqual(len(final_invoice.invoice_line_ids), 14)
+        self.assertEqual(len(final_invoice.invoice_line_ids), 9)
         self.assertEqual(final_invoice.delivery_note_ids, delivery_note)
 
         self.assertEqual(delivery_note.invoice_ids, final_invoice)
@@ -971,46 +811,6 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(invoice_line.quantity, 0)
         self.assertEqual(invoice_line.delivery_note_id, delivery_note)
 
-        #
-        # Fattura - Linea 10 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[9]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
-        #
-        # Fattura - Linea 11 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[10]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
-        #
-        # Fattura - Linea 12 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[11]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
-        #
-        # Fattura - Linea 13 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[12]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
-        #
-        # Fattura - Linea 14 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[13]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, delivery_note)
-
     # ⇒ "Ordini multipli: fatturazione parziale"
     def test_partial_invoicing_multiple_so(self):
         #
@@ -1119,11 +919,11 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         # TODO: questo test fallisce perche non viene per qualche motivo settato il
         #  first_delivery_note in una delle fatture... da capire il perchè.
 
-        first_sales_order._create_invoices(final=False)
+        first_sales_order._create_invoices()
         self.assertEqual(len(first_sales_order.order_line), 4)
         self.assertEqual(first_sales_order.invoice_status, "no")
 
-        second_sales_order._create_invoices(final=False)
+        second_sales_order._create_invoices()
         self.assertEqual(len(second_sales_order.order_line), 3)
         self.assertEqual(second_sales_order.invoice_status, "no")
 
@@ -1133,11 +933,11 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(len(invoices), 3)
 
         first_partial_invoice = invoices[0]
-        self.assertEqual(len(first_partial_invoice.invoice_line_ids), 6)
+        self.assertEqual(len(first_partial_invoice.invoice_line_ids), 4)
         self.assertEqual(first_partial_invoice.delivery_note_ids, first_delivery_note)
 
         second_partial_invoice = invoices[2]
-        self.assertEqual(len(second_partial_invoice.invoice_line_ids), 6)
+        self.assertEqual(len(second_partial_invoice.invoice_line_ids), 4)
         self.assertEqual(second_partial_invoice.delivery_note_ids, first_delivery_note)
 
         self.assertEqual(len(first_delivery_note.line_ids), 6)
@@ -1263,22 +1063,6 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
 
         #
-        # Fattura 1 - Linea 5 (DdT in fattura)
-        #
-        invoice_line = first_partial_invoice.invoice_line_ids[4]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
-
-        #
-        # Fattura 1 - Linea 6 (DdT in fattura)
-        #
-        invoice_line = first_partial_invoice.invoice_line_ids[5]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
-
-        #
         # Ordine 2 - Linea 1
         # Fattura 2 - Linea 1
         #
@@ -1353,22 +1137,6 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
 
         #
-        # Fattura 2 - Linea 5 (DdT in fattura)
-        #
-        invoice_line = second_partial_invoice.invoice_line_ids[4]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
-
-        #
-        # Fattura 2 - Linea 6 (DdT in fattura)
-        #
-        invoice_line = second_partial_invoice.invoice_line_ids[5]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, first_delivery_note)
-
-        #
         # =      =  -  =    = - =    =  -  =      =
         #
 
@@ -1387,7 +1155,7 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(len(invoices), 4)
 
         final_invoice = invoices[1]
-        self.assertEqual(len(final_invoice.invoice_line_ids), 8)
+        self.assertEqual(len(final_invoice.invoice_line_ids), 6)
         self.assertEqual(final_invoice.delivery_note_ids, second_delivery_note)
 
         self.assertEqual(second_delivery_note.invoice_ids, final_invoice)
@@ -1494,18 +1262,120 @@ class StockDeliveryNoteInvoicingTest(TransactionCase):
         self.assertEqual(invoice_line.quantity, 0)
         self.assertEqual(invoice_line.delivery_note_id, second_delivery_note)
 
-        #
-        # Fattura 3 - Linea 7 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[6]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, second_delivery_note)
+    def test_delivery_note_to_draft_from_create(self):
+        """
+        Create delivery_note from picking with already invoiced sale order then validate
+        and reset the status to draft.
+        """
+        sales_order = self.create_sales_order(
+            [
+                self.desk_combination_line,
+            ]
+        )
+        sales_order.action_confirm()
+        picking = sales_order.picking_ids
+        picking.move_lines[0].quantity_done = 1
+        picking.button_validate()
+        sales_order._create_invoices()
+        wizard = Form(
+            self.env["stock.delivery.note.create.wizard"].with_context(
+                active_ids=picking.ids, active_model="stock.picking"
+            )
+        ).save()
+        result = wizard.confirm()
+        delivery_note = self.env["stock.delivery.note"].browse(result["res_id"])
+        delivery_note.action_confirm()
+        delivery_note.action_cancel()
+        delivery_note.action_draft()
+        self.assertEqual(delivery_note.invoice_status, "no")
+        self.assertEqual(delivery_note.state, "draft")
 
-        #
-        # Fattura 3 - Linea 8 (DdT in fattura)
-        #
-        invoice_line = final_invoice.invoice_line_ids[7]
-        self.assertEqual(invoice_line.display_type, "line_note")
-        self.assertEqual(invoice_line.quantity, 0)
-        self.assertEqual(invoice_line.delivery_note_id, second_delivery_note)
+    def test_invoicing_multiple_dn(self):
+        user = new_test_user(
+            self.env,
+            login="test_multiple_dn",
+            groups="stock.group_stock_manager,"
+            "l10n_it_delivery_note.use_advanced_delivery_notes",
+        )
+        self.env.user = user
+        StockPicking = self.env["stock.picking"]
+        sales_order = self.create_sales_order(
+            [
+                self.right_corner_desk_line,  # 2
+                self.desk_combination_line,  # 1
+            ],
+        )
+        self.assertEqual(len(sales_order.order_line), 2)
+        sales_order.action_confirm()
+        self.assertEqual(len(sales_order.picking_ids), 1)
+        picking = sales_order.picking_ids
+        self.assertEqual(len(picking.move_lines), 2)
+
+        # deliver only half of the first product
+        picking.move_lines[0].quantity_done = 1
+        res_dict = picking.button_validate()
+        wizard = Form(
+            self.env[(res_dict.get("res_model"))]
+            .with_user(user)
+            .with_context(res_dict["context"])
+        ).save()
+        wizard.process()
+        res_dict = picking.action_delivery_note_create()
+        wizard = Form(
+            self.env[(res_dict.get("res_model"))]
+            .with_user(user)
+            .with_context(res_dict["context"])
+        ).save()
+        wizard.confirm()
+        self.assertTrue(picking.delivery_note_id)
+        dn = picking.delivery_note_id
+        self.assertEqual(dn.partner_id, self.recipient)
+        dn.action_confirm()
+        dn.action_done()
+        picking_backorder = StockPicking.search([("backorder_id", "=", picking.id)])
+        self.assertEqual(len(picking_backorder.move_lines), 2)
+        picking_backorder.move_lines[0].quantity_done = 1
+        picking_backorder.move_lines[1].quantity_done = 1
+        picking_backorder.button_validate()
+        self.assertEqual(picking_backorder.state, "done")
+        back_res_dict = picking_backorder.action_delivery_note_create()
+        back_wizard = Form(
+            self.env[(back_res_dict.get("res_model"))]
+            .with_user(user)
+            .with_context(back_res_dict["context"])
+        ).save()
+        back_wizard.confirm()
+        self.assertTrue(picking_backorder.delivery_note_id)
+        back_dn = picking_backorder.delivery_note_id
+        self.assertEqual(back_dn.partner_id, self.recipient)
+        back_dn.action_confirm()
+        back_dn.action_done()
+        sales_order._create_invoices()
+        self.assertTrue(len(sales_order.invoice_ids), 1)
+        invoice = sales_order.invoice_ids
+        invoice.action_post()
+        self.assertEqual(invoice.state, "posted")
+        self.assertEqual(
+            invoice.invoice_line_ids.filtered(
+                lambda inv_line: inv_line.product_id.id
+                == self.right_corner_desk_line[2]["product_id"]
+            ).quantity,
+            2,
+        )
+        self.assertEqual(
+            invoice.invoice_line_ids.filtered(
+                lambda inv_line: inv_line.product_id.id
+                == self.desk_combination_line[2]["product_id"]
+            ).quantity,
+            1,
+        )
+        self.assertEqual(dn.invoice_status, "invoiced")
+        self.assertEqual(back_dn.invoice_status, "invoiced")
+        self.assertIn(
+            f'Delivery Note "{dn.name}" of {dn.date.strftime(DATE_FORMAT)}',
+            invoice.invoice_line_ids.mapped("name"),
+        )
+        self.assertIn(
+            f'Delivery Note "{back_dn.name}" of {back_dn.date.strftime(DATE_FORMAT)}',
+            invoice.invoice_line_ids.mapped("name"),
+        )

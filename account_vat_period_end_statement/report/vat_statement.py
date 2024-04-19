@@ -8,6 +8,7 @@
 import time
 
 from odoo import api, models
+from odoo.exceptions import UserError
 from odoo.tools.misc import formatLang
 from odoo.tools.translate import _
 
@@ -19,11 +20,15 @@ class VatPeriodEndStatementReport(models.AbstractModel):
     @api.model
     def _get_report_values(self, docids, data=None):
         docs = self.env["account.vat.period.end.statement"].browse(docids)
+        companies = docs.mapped("company_id")
+        if len(companies) != 1:
+            raise UserError(_("You must select documents from the same company!"))
+        company = companies[0]
         vals = {
             "docs": docs,
             "time": time,
-            "tax_amounts": self._get_taxes_amounts,
-            "account_vat_amounts": self._get_account_vat_amounts,
+            "tax_amounts": self.with_company(company)._get_taxes_amounts,
+            "account_vat_amounts": self.with_company(company)._get_account_vat_amounts,
             "formatLang": formatLang,
             "env": self.env,
         }
@@ -52,21 +57,6 @@ class VatPeriodEndStatementReport(models.AbstractModel):
                     "registry_type": registry_type,
                 }
             )
-
-            if tax.cee_type and tax.parent_tax_ids and len(tax.parent_tax_ids) == 1:
-                # In caso di integrazione iva l'imponibile è solo sulla
-                # padre
-                parent = tax.parent_tax_ids[0]
-
-                tax_data = parent._compute_totals_tax(
-                    {
-                        "from_date": date_range.date_start,
-                        "to_date": date_range.date_end,
-                        "registry_type": registry_type,
-                    }
-                )
-                # return tax_name, base, tax_val, deductible, undeductible
-                base = tax_data[1]
 
             res[tax_name] = {
                 "code": tax_name,

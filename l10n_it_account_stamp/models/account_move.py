@@ -16,7 +16,7 @@ class AccountMove(models.Model):
     manually_apply_tax_stamp = fields.Boolean("Apply tax stamp")
 
     def is_tax_stamp_applicable(self):
-        stamp_product_id = self.env.company.with_context(
+        stamp_product_id = self.company_id.with_context(
             lang=self.partner_id.lang
         ).tax_stamp_product_id
         if not stamp_product_id:
@@ -56,7 +56,7 @@ class AccountMove(models.Model):
         for inv in self:
             if not inv.tax_stamp:
                 raise UserError(_("Tax stamp is not applicable"))
-            stamp_product_id = self.env.company.with_context(
+            stamp_product_id = inv.company_id.with_context(
                 lang=inv.partner_id.lang
             ).tax_stamp_product_id
             if not stamp_product_id:
@@ -86,6 +86,12 @@ class AccountMove(models.Model):
                 "analytic_account_id": None,
             }
             inv.write({"invoice_line_ids": [(0, 0, invoice_line_vals)]})
+
+    def _move_autocomplete_invoice_lines_values(self):
+        # Load line names in cache,
+        # otherwise they are reset to the default value
+        self.line_ids.mapped("name")
+        return super()._move_autocomplete_invoice_lines_values()
 
     def is_tax_stamp_line_present(self):
         for line in self.line_ids:
@@ -120,6 +126,7 @@ class AccountMove(models.Model):
             "debit": 0,
             "credit": product.list_price,
             "exclude_from_invoice_tab": True,
+            "currency_id": self.currency_id.id,
         }
         if self.move_type == "out_refund":
             income_vals["debit"] = product.list_price
@@ -135,6 +142,7 @@ class AccountMove(models.Model):
             "debit": product.list_price,
             "credit": 0,
             "exclude_from_invoice_tab": True,
+            "currency_id": self.currency_id.id,
         }
         if self.move_type == "out_refund":
             income_vals["debit"] = 0
@@ -155,7 +163,7 @@ class AccountMove(models.Model):
                     posted = True
                     inv.state = "draft"
                 line_model = self.env["account.move.line"]
-                stamp_product_id = self.env.company.with_context(
+                stamp_product_id = inv.company_id.with_context(
                     lang=inv.partner_id.lang
                 ).tax_stamp_product_id
                 if not stamp_product_id:

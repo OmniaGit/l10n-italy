@@ -127,7 +127,7 @@
                                                             class="left_without_line_bold"
                                                         ><div
                                                                 style="page-break-inside: avoid"
-                                                                t-esc="line['reference'].split(',')[0]"
+                                                                t-esc="move.ref"
                                                             /></td>
                                                 </t>
                                                 <t
@@ -223,7 +223,7 @@
                                         </tr>
                                     </thead>
                                     <t
-                                            t-foreach="total_used_taxes"
+                                            t-foreach="total_used_taxes.sorted()"
                                             t-as="total_used_tax"
                                         >
                                         <t

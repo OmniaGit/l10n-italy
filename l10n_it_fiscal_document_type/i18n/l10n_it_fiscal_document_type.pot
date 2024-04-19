@@ -64,13 +64,17 @@ msgstr ""
 #: model:ir.actions.act_window,name:l10n_it_fiscal_document_type.action_view_fiscal_document_type
 #: model:ir.ui.menu,name:l10n_it_fiscal_document_type.menu_fiscal_document_type
 #: model_terms:ir.ui.view,arch_db:l10n_it_fiscal_document_type.view_fiscal_document_type_form
-#: model_terms:ir.ui.view,arch_db:l10n_it_fiscal_document_type.view_fiscal_document_type_tree
 msgid "Fiscal Document Types"
 msgstr ""
 
 #. module: l10n_it_fiscal_document_type
 #: model:ir.model,name:l10n_it_fiscal_document_type.model_account_fiscal_position
 msgid "Fiscal Position"
+msgstr ""
+
+#. module: l10n_it_fiscal_document_type
+#: model:ir.model.fields,field_description:l10n_it_fiscal_document_type.field_fiscal_document_type__refund_fiscal_document_type_id
+msgid "Fiscal document for refund"
 msgstr ""
 
 #. module: l10n_it_fiscal_document_type
