@@ -4,13 +4,17 @@ from odoo import models, fields, api
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    @api.onchange('partner_id', 'journal_id', 'type', 'fiscal_position_id')
+    @api.multi
+    @api.depends('partner_id', 'journal_id', 'type', 'fiscal_position_id')
     def _set_document_fiscal_type(self):
-        dt = self._get_document_fiscal_type(
-            self.type, self.partner_id, self.fiscal_position_id,
-            self.journal_id)
-        if len(dt) == 1:
-            self.fiscal_document_type_id = dt[0]
+        for invoice in self:
+            if invoice.state != 'draft':
+                continue
+            dt = invoice._get_document_fiscal_type(
+                invoice.type, invoice.partner_id, invoice.fiscal_position_id,
+                invoice.journal_id)
+            if dt:
+                invoice.fiscal_document_type_id = dt[0]
 
     def _get_document_fiscal_type(self, type=None, partner=None,
                                   fiscal_position=None, journal=None):
@@ -21,9 +25,9 @@ class AccountInvoice(models.Model):
 
         # Partner
         if partner:
-            if type in ('out_invoice', 'out_refund'):
+            if type in ('out_invoice'):
                 doc_id = partner.out_fiscal_document_type.id or False
-            elif type in ('in_invoice', 'in_refund'):
+            elif type in ('in_invoice'):
                 doc_id = partner.in_fiscal_document_type.id or False
         # Fiscal Position
         if not doc_id and fiscal_position:
@@ -35,11 +39,21 @@ class AccountInvoice(models.Model):
         if not doc_id and not dt:
             dt = self.env['fiscal.document.type'].search([
                 (type, '=', True)]).ids
+        # Refund Document type
+        if dt and 'refund' in type:
+            fdt = self.env['fiscal.document.type'].browse(dt[0])
+            if fdt and not fdt.out_refund\
+                    and not fdt.in_refund\
+                    and fdt.refund_fiscal_document_type_id:
+                dt[0] = fdt.refund_fiscal_document_type_id.id
+
         if doc_id:
             dt.append(doc_id)
         return dt
 
     fiscal_document_type_id = fields.Many2one(
         'fiscal.document.type',
-        string="Tipo documento fiscale",
+        string="Fiscal Document Type",
+        compute='_set_document_fiscal_type',
+        store=True,
         readonly=False)
