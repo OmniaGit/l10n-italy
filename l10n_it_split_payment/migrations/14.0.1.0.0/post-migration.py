@@ -22,6 +22,17 @@ def migrate(cr, installed_version):
     line_ids = MoveLine.search([("name", "in", text_vals)]).ids
     if line_ids:
         openupgrade.logged_query(
+<<<<<<< HEAD
+        cr,
+        """
+update account_move_line
+set is_split_payment = True
+where id in {line_ids}
+    """.format(
+            line_ids=tuple(line_ids)
+        ),
+    )
+=======
             cr,
             """
             update account_move_line
@@ -31,3 +42,4 @@ def migrate(cr, installed_version):
                 line_ids=",".join(map(str, line_ids))
             ),
         )
+>>>>>>> 0ea88591eae932c1799c0e0f34b89be93f85e574
