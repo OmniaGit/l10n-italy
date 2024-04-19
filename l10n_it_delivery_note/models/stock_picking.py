@@ -99,6 +99,8 @@ class StockPicking(models.Model):
     delivery_note_readonly = fields.Boolean(compute="_compute_boolean_flags")
     delivery_note_visible = fields.Boolean(compute="_compute_boolean_flags")
     can_be_invoiced = fields.Boolean(compute="_compute_boolean_flags")
+    dn_supplier_number = fields.Char(string="Supplier DN Number", copy=False)
+    dn_supplier_date = fields.Date(string="Supplier DN Date", copy=False)
 
     @property
     def _delivery_note_fields(self):
@@ -124,7 +126,9 @@ class StockPicking(models.Model):
 
         for picking in self:
             picking.use_delivery_note = (
-                not from_delivery_note and picking.state == DONE_PICKING_STATE
+                not picking.picking_type_id.prevent_dn_create
+                and not from_delivery_note
+                and picking.state == DONE_PICKING_STATE
             )
 
             picking.delivery_note_visible = use_advanced_behaviour
@@ -304,6 +308,9 @@ class StockPicking(models.Model):
             )
 
     def _must_create_delivery_note(self):
+        if self.picking_type_id.prevent_dn_create:
+            return False
+
         use_advanced_behaviour = self.user_has_groups(
             "l10n_it_delivery_note.use_advanced_delivery_notes"
         )
@@ -349,9 +356,7 @@ class StockPicking(models.Model):
             {
                 "company_id": self.company_id.id,
                 "partner_sender_id": partners[0].id,
-                "partner_id": self.sale_id.partner_id.id
-                if self.sale_id
-                else partners[0].id,
+                "partner_id": partners[2].id if self.sale_id else partners[0].id,
                 "partner_shipping_id": partners[1].id,
                 "type_id": type_id.id,
                 "date": self.date_done,
@@ -387,6 +392,7 @@ class StockPicking(models.Model):
         partner_id = self.mapped("partner_id")
         src_location_id = self.mapped("location_id")
         dest_location_id = self.mapped("location_dest_id")
+        picking_type_code = self.mapped("picking_type_code")
 
         src_warehouse_id = src_location_id.get_warehouse()
         dest_warehouse_id = dest_location_id.get_warehouse()
@@ -395,18 +401,30 @@ class StockPicking(models.Model):
         dest_partner_id = dest_warehouse_id.partner_id
 
         if not src_partner_id:
-            src_partner_id = partner_id
+            src_partner_id = (
+                self.company_id.partner_id
+                if picking_type_code == ["outgoing"]
+                else partner_id
+            )
 
-            if not dest_partner_id:
+        if not dest_partner_id:
+            dest_partner_id = (
+                self.company_id.partner_id
+                if picking_type_code == ["incoming"]
+                else partner_id
+            )
+
+        if self.mapped("sale_id"):
+            partner_ids = self.mapped("sale_id.partner_invoice_id")
+            if len(partner_ids) > 1:
                 raise ValueError(
-                    "Fields 'src_partner_id' and 'dest_partner_id' "
-                    "cannot be both unset."
+                    "Multiple partner found for sale order linked to pickings!"
                 )
+            partner_id = partner_ids[0]
+        else:
+            partner_id = dest_partner_id.commercial_partner_id
 
-        elif not dest_partner_id:
-            dest_partner_id = partner_id
-
-        return (src_partner_id, dest_partner_id)
+        return (src_partner_id, dest_partner_id, partner_id)
 
     def get_partners(self):
         self._check_delivery_note_consistency()

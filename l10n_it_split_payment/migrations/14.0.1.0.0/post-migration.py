@@ -37,9 +37,9 @@ where id in {line_ids}
             """
             update account_move_line
             set is_split_payment = True
-            where id in {line_ids}
+            where id in ({line_ids})
             """.format(
-                line_ids=tuple(line_ids)
+                line_ids=",".join(map(str, line_ids))
             ),
         )
 >>>>>>> 0ea88591eae932c1799c0e0f34b89be93f85e574

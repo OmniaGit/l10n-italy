@@ -8,7 +8,6 @@ from odoo.tools.misc import format_date
 
 
 class AccountMove(models.Model):
-
     _inherit = "account.move"
 
     declaration_of_intent_ids = fields.Many2many(
@@ -145,15 +144,9 @@ class AccountMove(models.Model):
                     if is_sale_document:
                         cmt = self.narration or ""
                         msg = (
-                            "Vostra dichiarazione d'intento nr %s del %s, "
-                            "nostro protocollo nr %s del %s, "
+                            "Vostra dichiarazione d'intento del %s, "
                             "protocollo telematico nr %s."
                             % (
-                                declaration.partner_document_number,
-                                format_date(
-                                    self.env, declaration.partner_document_date
-                                ),
-                                declaration.number,
                                 format_date(self.env, declaration.date),
                                 declaration.telematic_protocol,
                             )
@@ -230,7 +223,7 @@ class AccountMove(models.Model):
         declarations_residual = sum(
             [declarations_amounts[da] for da in declarations_amounts]
         )
-        if declarations_residual < 0:
+        if self.currency_id.compare_amounts(declarations_residual, 0) == -1:
             raise UserError(
                 _("Available plafond insufficent.\n" "Excess value: %s")
                 % (abs(declarations_residual))
@@ -242,7 +235,12 @@ class AccountMove(models.Model):
             declaration = declaration_model.browse(declaration_id)
             # declarations_amounts contains residual, so, if > limit_amount,
             # used_amount went < 0
-            if declarations_amounts[declaration_id] > declaration.limit_amount:
+            if (
+                self.currency_id.compare_amounts(
+                    declarations_amounts[declaration_id], declaration.limit_amount
+                )
+                == 1
+            ):
                 excess = abs(
                     declarations_amounts[declaration_id] - declaration.limit_amount
                 )
@@ -253,6 +251,12 @@ class AccountMove(models.Model):
 
     def get_declaration_residual_amounts(self, declarations):
         """Get residual amount for every `declarations`."""
+        available_plafond = 0.0
+        if self.move_type in ["in_invoice", "in_refund"]:
+            plafond = self.company_id.declaration_yearly_limit_ids.filtered(
+                lambda r: r.year == str(fields.first(declarations).date_start.year)
+            )
+            available_plafond = plafond.limit_amount - plafond.actual_used_amount
         declarations_amounts = {}
         # If the tax amount is 0, then there is no line representing the tax
         # so there will be no line having tax_line_id.
@@ -268,9 +272,18 @@ class AccountMove(models.Model):
 
             for declaration in declarations:
                 if declaration.id not in declarations_amounts:
-                    declarations_amounts[declaration.id] = declaration.available_amount
+                    if (
+                        self.move_type in ["in_invoice", "in_refund"]
+                        and declaration.available_amount > available_plafond
+                    ):
+                        declarations_amounts[declaration.id] = available_plafond
+                    else:
+                        declarations_amounts[
+                            declaration.id
+                        ] = declaration.available_amount
                 if any(tax in declaration.taxes_ids for tax in tax_line.tax_ids):
                     declarations_amounts[declaration.id] -= amount
+                    amount = 0.0
         for declaration in declarations:
             # exclude amount from lines with invoice_id equals to self
             for line in declaration.line_ids.filtered(lambda l: l.invoice_id == self):
@@ -290,7 +303,6 @@ class AccountMove(models.Model):
 
 
 class AccountMoveLine(models.Model):
-
     _inherit = "account.move.line"
 
     force_declaration_of_intent_id = fields.Many2one(

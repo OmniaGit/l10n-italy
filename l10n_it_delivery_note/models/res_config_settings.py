@@ -17,6 +17,11 @@ class ResConfigSettings(models.TransientModel):
         implied_group="l10n_it_delivery_note.use_advanced_delivery_notes",
     )
 
+    group_required_partner_ref = fields.Boolean(
+        string="Make Partner Ref. in DN Mandatory",
+        implied_group="l10n_it_delivery_note.group_required_partner_ref",
+    )
+
     virtual_locations_root = fields.Many2one(
         "stock.location",
         string="Virtual locations root",
@@ -42,5 +47,9 @@ class ResConfigSettings(models.TransientModel):
     display_delivery_method_dn_report = fields.Boolean(
         string="Display Delivery Method in Delivery Note Report",
         related="company_id.display_delivery_method_dn_report",
+        readonly=False,
+    )
+    display_total_in_dn_with_prices = fields.Boolean(
+        related="company_id.display_total_in_dn_with_prices",
         readonly=False,
     )

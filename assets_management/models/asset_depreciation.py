@@ -10,6 +10,7 @@ from odoo.tools import float_compare, float_is_zero
 class AssetDepreciation(models.Model):
     _name = "asset.depreciation"
     _description = "Assets Depreciations"
+    _check_company_auto = True
 
     amount_depreciable = fields.Monetary(string="Initial Depreciable Amount")
 
@@ -85,7 +86,11 @@ class AssetDepreciation(models.Model):
 
     date_start = fields.Date(string="Date Start")
 
-    dismiss_move_id = fields.Many2one("account.move", string="Dismiss Move")
+    dismiss_move_id = fields.Many2one(
+        "account.move",
+        string="Dismiss Move",
+        check_company=True,
+    )
 
     first_dep_nr = fields.Integer(
         default=1,
@@ -103,13 +108,17 @@ class AssetDepreciation(models.Model):
     )
 
     line_ids = fields.One2many(
-        "asset.depreciation.line", "depreciation_id", string="Lines"
+        "asset.depreciation.line",
+        "depreciation_id",
+        string="Lines",
+        check_company=True,
     )
 
     mode_id = fields.Many2one(
         "asset.depreciation.mode",
         required=True,
         string="Mode",
+        check_company=True,
     )
 
     percentage = fields.Float(string="Depreciation (%)")
@@ -134,7 +143,11 @@ class AssetDepreciation(models.Model):
         string="State",
     )
 
-    type_id = fields.Many2one("asset.depreciation.type", string="Depreciation Type")
+    type_id = fields.Many2one(
+        "asset.depreciation.type",
+        string="Depreciation Type",
+        check_company=True,
+    )
 
     zero_depreciation_until = fields.Date(string="Zero Depreciation Up To")
 
@@ -286,7 +299,9 @@ class AssetDepreciation(models.Model):
 
         new_lines = self.env["asset.depreciation.line"]
         for dep in self:
-            new_lines |= dep.generate_depreciation_lines_single(dep_date)
+            new_line = dep.generate_depreciation_lines_single(dep_date)
+            if new_line:
+                new_lines |= new_line
 
         return new_lines
 
@@ -298,6 +313,8 @@ class AssetDepreciation(models.Model):
         dep_nr = self.get_max_depreciation_nr() + 1
         dep = self.with_context(dep_nr=dep_nr, used_asset=self.asset_id.used)
         dep_amount = dep.get_depreciation_amount(dep_date)
+        if not dep_amount:
+            return res
         dep = dep.with_context(dep_amount=dep_amount)
 
         vals = dep.prepare_depreciation_line_vals(dep_date)
