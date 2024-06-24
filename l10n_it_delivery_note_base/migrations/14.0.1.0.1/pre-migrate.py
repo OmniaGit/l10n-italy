@@ -7,8 +7,8 @@ from openupgradelib import openupgrade
 def migrate(env, version):
     # delete stock.delivery.note.type model data due to change
     # into via code creation for every company
-    openupgrade.lift_constraints(env,
-                                 'stock_delivery_note_type',
+    openupgrade.lift_constraints(env.cr,
+                                 'l10n_it_delivery_note_base.delivery_note_type',
                                  'sequence_id')
     #
     deleted_dn_type_data = (
