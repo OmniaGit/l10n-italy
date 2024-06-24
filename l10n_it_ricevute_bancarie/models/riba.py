@@ -137,6 +137,16 @@ class RibaList(models.Model):
             "context": self.env.context,
         }
 
+    def action_riba_due_date_settlement(self):
+        return {
+            "type": "ir.actions.act_window",
+            "name": "C/O Due Date Settlement",
+            "res_model": "riba.due.date.settlement",
+            "view_mode": "form",
+            "target": "new",
+            "context": self.env.context,
+        }
+
     def unlink(self):
         for riba_list in self:
             if riba_list.state not in ("draft", "cancel"):
@@ -237,7 +247,7 @@ class RibaListLine(models.Model):
                     )
                 if not line.invoice_number:
                     line.invoice_number = str(
-                        move_line.move_line_id.move_id.move_id.name
+                        move_line.move_line_id.move_id.name
                         if move_line.move_line_id.move_id.display_name == "/"
                         else move_line.move_line_id.move_id.display_name
                     )
@@ -245,7 +255,7 @@ class RibaListLine(models.Model):
                     line.invoice_number = "{}, {}".format(
                         line.invoice_number,
                         str(
-                            move_line.move_line_id.move_id.move_id.name
+                            move_line.move_line_id.move_id.name
                             if move_line.move_line_id.move_id.display_name == "/"
                             else move_line.move_line_id.move_id.display_name
                         ),

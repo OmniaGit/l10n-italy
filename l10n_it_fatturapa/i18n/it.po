@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-04-09 12:26+0000\n"
-"PO-Revision-Date: 2023-12-19 15:36+0000\n"
-"Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
+"PO-Revision-Date: 2024-06-10 11:38+0000\n"
+"Last-Translator: Francesco Foresti <francesco.foresti@ooops404.com>\n"
 "Language-Team: \n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
@@ -377,6 +377,7 @@ msgstr "Dettagli sconto o maggiorazione"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_related_ddt__display_name
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_related_document_type__display_name
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_summary_data__display_name
+#: model:ir.model.fields,field_description:l10n_it_fatturapa.field_l10n_it_fatturapa_attachment_e_invoice_link__display_name
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_company__display_name
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_config_settings__display_name
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_partner__display_name
@@ -647,6 +648,7 @@ msgstr "IBAN"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_related_ddt__id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_related_document_type__id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_summary_data__id
+#: model:ir.model.fields,field_description:l10n_it_fatturapa.field_l10n_it_fatturapa_attachment_e_invoice_link__id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_company__id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_config_settings__id
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_partner__id
@@ -810,6 +812,7 @@ msgstr "Chiave"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_related_ddt____last_update
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_related_document_type____last_update
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_summary_data____last_update
+#: model:ir.model.fields,field_description:l10n_it_fatturapa.field_l10n_it_fatturapa_attachment_e_invoice_link____last_update
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_company____last_update
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_config_settings____last_update
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_res_partner____last_update
@@ -885,6 +888,11 @@ msgstr "Numero riga"
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_related_document_type__lineRef
 msgid "Line Ref."
 msgstr "Rif. riga"
+
+#. module: l10n_it_fatturapa
+#: model:ir.model,name:l10n_it_fatturapa.model_l10n_it_fatturapa_attachment_e_invoice_link
+msgid "Link attachment in current record"
+msgstr "Link allegato al record corrrente"
 
 #. module: l10n_it_fatturapa
 #: model:ir.model.fields,field_description:l10n_it_fatturapa.field_fatturapa_attachment__message_main_attachment_id
