@@ -7,7 +7,6 @@ from openupgradelib import openupgrade
 def migrate(env, version):
     # delete stock.delivery.note.type model data due to change
     # into via code creation for every company
-    module, table, name
     openupgrade.delete_sql_constraint_safely(env,
                                              '10n_it_delivery_note_base',
                                              'stock_delivery_note_type',
