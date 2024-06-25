@@ -5,6 +5,7 @@ from openupgradelib import openupgrade
 
 @openupgrade.migrate()
 def migrate(env, version):
+    return
     # delete stock.delivery.note.type model data due to change
     # into via code creation for every company
     openupgrade.lift_constraints(env.cr,
