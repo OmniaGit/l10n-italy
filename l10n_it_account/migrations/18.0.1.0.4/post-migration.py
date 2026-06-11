@@ -20,38 +20,48 @@ _logger = logging.getLogger(__name__)
 
 
 def migrate(cr, version):
-    if not openupgrade_tools.table_exists(cr, "discuss_channel"):
-        return
-    if not openupgrade.column_exists(cr, "discuss_channel", "uuid"):
-        return
+    # Wrapped in a savepoint so a failure here can NEVER abort the whole
+    # v16->v18 upgrade transaction; the cleanup is best-effort.
+    try:
+        with cr.savepoint():
+            if not openupgrade_tools.table_exists(cr, "discuss_channel"):
+                return
+            if not openupgrade.column_exists(cr, "discuss_channel", "uuid"):
+                return
 
-    # NULL/empty uuids -> assign a fresh one
-    cr.execute(
-        """
-        UPDATE discuss_channel
-        SET uuid = md5(random()::text || clock_timestamp()::text || id::text)
-        WHERE uuid IS NULL OR uuid = ''
-        """
-    )
-    backfilled = cr.rowcount
+            # NULL/empty uuids -> assign a fresh one
+            cr.execute(
+                """
+                UPDATE discuss_channel
+                SET uuid = md5(random()::text || clock_timestamp()::text || id::text)
+                WHERE uuid IS NULL OR uuid = ''
+                """
+            )
+            backfilled = cr.rowcount
 
-    # Duplicates -> keep the lowest id, regenerate the rest
-    cr.execute(
-        """
-        UPDATE discuss_channel d
-        SET uuid = md5(random()::text || clock_timestamp()::text || d.id::text)
-        WHERE EXISTS (
-            SELECT 1 FROM discuss_channel d2
-            WHERE d2.uuid = d.uuid AND d2.id < d.id
-        )
-        """
-    )
-    deduped = cr.rowcount
+            # Duplicates -> keep the lowest id, regenerate the rest
+            cr.execute(
+                """
+                UPDATE discuss_channel d
+                SET uuid = md5(random()::text || clock_timestamp()::text || d.id::text)
+                WHERE EXISTS (
+                    SELECT 1 FROM discuss_channel d2
+                    WHERE d2.uuid = d.uuid AND d2.id < d.id
+                )
+                """
+            )
+            deduped = cr.rowcount
 
-    if backfilled or deduped:
-        _logger.info(
-            "v18 migration: discuss_channel.uuid - backfilled %s null/empty, "
-            "regenerated %s duplicate(s) so the unique constraint can be added",
-            backfilled,
-            deduped,
+            if backfilled or deduped:
+                _logger.info(
+                    "v18 migration: discuss_channel.uuid - backfilled %s "
+                    "null/empty, regenerated %s duplicate(s) so the unique "
+                    "constraint can be added",
+                    backfilled,
+                    deduped,
+                )
+    except Exception:
+        _logger.exception(
+            "v18 migration: discuss_channel uuid dedup failed; continuing "
+            "without aborting the upgrade"
         )

@@ -33,34 +33,43 @@ STALE_CUSTOM_VIEW_FIELDS = [
 ]
 
 def migrate(cr, version):
-    archived_total = 0
-    for model, field in STALE_CUSTOM_VIEW_FIELDS:
-        cr.execute(
-            """
-            UPDATE ir_ui_view SET active = false
-            WHERE active = true
-              AND model = %s
-              AND arch_db::text LIKE %s
-              AND id NOT IN (
-                  SELECT res_id FROM ir_model_data
-                  WHERE model = 'ir.ui.view'
-                    AND module IN (SELECT name FROM ir_module_module)
-              )
-            """,
-            (model, "%" + field + "%"),
-        )
-        if cr.rowcount:
-            _logger.info(
-                "v18 migration: archived %s stale custom view(s) for model %s "
-                "referencing removed field %r",
-                cr.rowcount,
-                model,
-                field,
-            )
-        archived_total += cr.rowcount
+    # Wrapped in a savepoint so a failure here can NEVER abort the whole
+    # v16->v18 upgrade transaction; the cleanup is best-effort.
+    try:
+        with cr.savepoint():
+            archived_total = 0
+            for model, field in STALE_CUSTOM_VIEW_FIELDS:
+                cr.execute(
+                    """
+                    UPDATE ir_ui_view SET active = false
+                    WHERE active = true
+                      AND model = %s
+                      AND arch_db::text LIKE %s
+                      AND id NOT IN (
+                          SELECT res_id FROM ir_model_data
+                          WHERE model = 'ir.ui.view'
+                            AND module IN (SELECT name FROM ir_module_module)
+                      )
+                    """,
+                    (model, "%" + field + "%"),
+                )
+                if cr.rowcount:
+                    _logger.info(
+                        "v18 migration: archived %s stale custom view(s) for "
+                        "model %s referencing removed field %r",
+                        cr.rowcount,
+                        model,
+                        field,
+                    )
+                archived_total += cr.rowcount
 
-    _logger.info(
-        "v18 migration (non-destructive): archived %s stale custom view(s) "
-        "referencing fields removed in v18",
-        archived_total,
-    )
+            _logger.info(
+                "v18 migration (non-destructive): archived %s stale custom "
+                "view(s) referencing fields removed in v18",
+                archived_total,
+            )
+    except Exception:
+        _logger.exception(
+            "v18 migration: stale-custom-view archival failed; continuing "
+            "without aborting the upgrade"
+        )
