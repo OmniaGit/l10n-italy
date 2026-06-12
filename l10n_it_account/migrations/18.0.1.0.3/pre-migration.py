@@ -112,6 +112,28 @@ def migrate(cr, version):
     )
     archived_menus = cr.rowcount
 
+    # 2c) Unbind deprecated WINDOW ACTIONS (clear binding_model_id) so they
+    #     stop being injected into the v18 "Action" (gear) menu of kept models.
+    #     The deprecated modules bound actions to still-live models (e.g.
+    #     l10n_it_fatturapa_out.action_wizard_export_fatturapa -> account.move),
+    #     but their target res_model (wizard.export.fatturapa, ...) no longer
+    #     exists in code. Archiving views/menus does NOT remove these bindings,
+    #     so the orphan action keeps appearing and opening it raises
+    #     KeyError -> "404 Not Found" (registry has no such model).
+    #     Non-destructive: the action record is kept (noupdate-protected in
+    #     step 3); only the binding columns are cleared.
+    cr.execute(
+        """
+        UPDATE ir_act_window SET binding_model_id = NULL,
+                                 binding_view_types = NULL
+        WHERE binding_model_id IS NOT NULL
+          AND id IN (SELECT res_id FROM ir_model_data
+                     WHERE model = 'ir.actions.act_window' AND module = ANY(%s))
+        """,
+        (DEPRECATED_MODULES,),
+    )
+    unbound_actions = cr.rowcount
+
     # 3) Protect every deprecated external-id from _process_end deletion by
     #    flipping noupdate to true (non-destructive: nothing is removed).
     cr.execute(
@@ -125,10 +147,12 @@ def migrate(cr, version):
 
     _logger.info(
         "v18 migration (non-destructive): archived %s deprecated + %s kept "
-        "views, %s menus; set noupdate=true on %s external-ids to protect "
-        "records/tables from _process_end cleanup",
+        "views, %s menus; unbound %s deprecated window actions; set "
+        "noupdate=true on %s external-ids to protect records/tables from "
+        "_process_end cleanup",
         archived_views,
         archived_kept,
         archived_menus,
+        unbound_actions,
         protected,
     )
