@@ -62,19 +62,11 @@ class ResPartnerInherit(models.Model):
                     # the user might insert VAT in l10n_it_codice_fiscale field.
                     # Perform the same check as Company case
                     continue
-                cf = partner.l10n_it_codice_fiscale
-                numeric = cf[2:] if cf[:2].upper() == "IT" else cf
-                if numeric.isdigit() and len(numeric) == 11:
-                    # An 11-digit value (optionally prefixed with the country
-                    # code) is a Partita IVA, not a 16-char personal codice
-                    # fiscale -- a person may legitimately carry a VAT here, so
-                    # do not reject it as a malformed fiscal code.
-                    continue
-                if len(cf) != 16:
+                if len(partner.l10n_it_codice_fiscale) != 16:
                     # Check l10n_it_codice_fiscale length of a person
                     msg = self.env._(
                         "The fiscal code '%s' must have 16 characters.",
-                        cf,
+                        partner.l10n_it_codice_fiscale,
                     )
                     raise ValidationError(msg)
         return res
