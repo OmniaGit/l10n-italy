@@ -10,6 +10,15 @@ from ..controllers.main import CustomerPortal
 
 
 class TestMyAccount(tests.HttpCase):
+    def setUp(self):
+        super().setUp()
+        # These tests drive the /my/account portal form as the demo user; on a
+        # database loaded without demo data (e.g. odoo.sh production/staging
+        # builds run with --without-demo) `base.user_demo` does not exist and
+        # env.ref() would raise, erroring the whole test. Skip instead.
+        if not self.env.ref("base.user_demo", raise_if_not_found=False):
+            self.skipTest("Requires demo data (base.user_demo is not available).")
+
     def _prepare_form_data(self, user):
         """Form data ready for POST in /my/account.
 
