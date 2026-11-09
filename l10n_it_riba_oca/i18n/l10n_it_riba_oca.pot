@@ -188,7 +188,6 @@ msgstr ""
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_configuration__bank_expense_account_id
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_credit__bank_expense_account_id
-#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__bank_expense_account_id
 msgid "Bank Fees Account"
 msgstr ""
 
@@ -410,7 +409,6 @@ msgstr ""
 
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_credit__credit_amount
-#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__credit_amount
 msgid "Credit Amount"
 msgstr ""
 
@@ -451,6 +449,7 @@ msgid "Credit date must be greater or equal to acceptance date."
 msgstr ""
 
 #. module: l10n_it_riba_oca
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__credited
 #: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__riba_slip__state__credited
 #: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__riba_slip_line__state__credited
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.view_detail_riba_filter
@@ -562,6 +561,12 @@ msgid "Every account is mandatory."
 msgstr ""
 
 #. module: l10n_it_riba_oca
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_partner__riba_exclude_expenses
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_users__riba_exclude_expenses
+msgid "Exclude expenses Ri.Ba."
+msgstr ""
+
+#. module: l10n_it_riba_oca
 #: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_credit__bank_expense_account_id
 msgid ""
 "Expense account for recording bank collection fees. This account will be "
@@ -586,11 +591,6 @@ msgstr ""
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_configuration__past_due_fee_amount
 msgid "Fee Amount"
-msgstr ""
-
-#. module: l10n_it_riba_oca
-#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__expense_amount
-msgid "Fees Amount"
 msgstr ""
 
 #. module: l10n_it_riba_oca
@@ -693,6 +693,13 @@ msgstr ""
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_past_due__date
 msgid "If empty, the due date in the line will be used."
+msgstr ""
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_partner__riba_exclude_expenses
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_users__riba_exclude_expenses
+msgid ""
+"If set, collection fees are never added to the invoices of this partner."
 msgstr ""
 
 #. module: l10n_it_riba_oca
@@ -893,6 +900,11 @@ msgid "Messages"
 msgstr ""
 
 #. module: l10n_it_riba_oca
+#: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__res_partner__riba_policy_expenses__one_a_month
+msgid "More invoices, one expense per Month"
+msgstr ""
+
+#. module: l10n_it_riba_oca
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.view_riba_slip_line_form
 msgid "Move Line"
 msgstr ""
@@ -979,6 +991,19 @@ msgstr ""
 #: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_slip__message_has_error_counter
 #: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_slip_line__message_has_error_counter
 msgid "Number of messages with delivery error"
+msgstr ""
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__res_partner__riba_policy_expenses__unlimited
+msgid "One expense per maturity"
+msgstr ""
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_partner__riba_policy_expenses
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_users__riba_policy_expenses
+msgid ""
+"One expense per month: collection fees are not added for the due dates falling in a month where the partner already has upcoming RiBa due dates on invoices with collection fees.\n"
+"One expense per maturity: collection fees are added for every due date."
 msgstr ""
 
 #. module: l10n_it_riba_oca
@@ -1096,6 +1121,12 @@ msgid "Past Dues"
 msgstr ""
 
 #. module: l10n_it_riba_oca
+#. odoo-python
+#: code:addons/l10n_it_riba_oca/wizard/wizard_past_due.py:0
+msgid "Past due fees need the A/C bank account and the protest fee account."
+msgstr ""
+
+#. module: l10n_it_riba_oca
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.riba_payment_multiple_view_form
 msgid "Pay"
 msgstr ""
@@ -1172,6 +1203,7 @@ msgstr ""
 
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_configuration__protest_charge_account_id
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__bank_expense_account_id
 msgid "Protest Fee Account"
 msgstr ""
 
@@ -1193,6 +1225,12 @@ msgstr ""
 #. module: l10n_it_riba_oca
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.view_riba_slip_form
 msgid "Reset to Draft"
+msgstr ""
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_partner__riba_policy_expenses
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_users__riba_policy_expenses
+msgid "Ri.Ba. Policy expenses"
 msgstr ""
 
 #. module: l10n_it_riba_oca
@@ -1425,6 +1463,14 @@ msgid ""
 msgstr ""
 
 #. module: l10n_it_riba_oca
+#. odoo-python
+#: code:addons/l10n_it_riba_oca/wizard/wizard_past_due.py:0
+msgid ""
+"Slip %(slip)s has been credited by the bank: the past due of line %(line)s "
+"has to be recorded with its journal entry."
+msgstr ""
+
+#. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_slip_move_line__riba_line_id
 msgid "Slip Line"
 msgstr ""
@@ -1468,6 +1514,13 @@ msgstr ""
 msgid ""
 "The bank accounts with accreditation code {acc_codes}s cannot be deleted as "
 "they are used in invoices. If possible, archive the bank account"
+msgstr ""
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_past_due__credited
+msgid ""
+"The slip has been credited by the bank: the past due has to be recorded with"
+" its journal entry."
 msgstr ""
 
 #. module: l10n_it_riba_oca

@@ -18,6 +18,19 @@
                     />
                 </div>
             </xpath>
+            <xpath expr="//button[@name='action_l10n_it_edi_send']" position="before">
+                <field name="l10n_it_document_type_code" invisible="1" />
+            </xpath>
+            <xpath
+                expr="//button[@name='action_l10n_it_edi_send']"
+                position="attributes"
+            >
+                <attribute
+                    name="invisible"
+                    add="l10n_it_document_type_code in ('TD01', 'TD04', 'TD24')"
+                    separator=" or "
+                />
+            </xpath>
             <xpath
                 expr="//field[@name='invoice_line_ids']/list/field[@name='analytic_distribution']"
                 position="after"
@@ -174,6 +187,23 @@
                         </group>
                     </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="account_invoice_list_l10n_it_inherit_view" model="ir.ui.view">
+        <field name="name">account.move.list.l10n.it.inherit.view</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button
+                    name="action_l10n_it_edi_ext_send_self_invoices"
+                    type="object"
+                    string="Send self-invoices to SDI"
+                    groups="account.group_account_invoice"
+                    invisible="context.get('default_move_type') not in ('in_invoice', 'in_refund')"
+                />
             </xpath>
         </field>
     </record>

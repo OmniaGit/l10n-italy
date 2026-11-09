@@ -2,12 +2,16 @@
 # Copyright 2025 Simone Rubino
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
+import logging
+
 from odoo import api, fields, models, osv
 from odoo.exceptions import UserError
-from odoo.tools import float_compare, html2plaintext
+from odoo.tools import float_compare, html2plaintext, is_html_empty
 
 from odoo.addons.base.models.ir_qweb_fields import Markup
 from odoo.addons.l10n_it_edi.models.account_move import get_date, get_float, get_text
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountMoveInherit(models.Model):
@@ -127,6 +131,10 @@ class AccountMoveInherit(models.Model):
     l10n_it_edi_validation_message = fields.Text(
         compute="_compute_l10n_it_edi_validation_message"
     )
+    l10n_it_document_type_code = fields.Char(
+        related="l10n_it_document_type.code",
+        string="Document Type Code",
+    )
 
     # -------------------------------------------------------------------------
     # Computes
@@ -232,9 +240,129 @@ class AccountMoveInherit(models.Model):
             "target": "new",
         }
 
+    def action_l10n_it_edi_ext_send_self_invoices(self):
+        """Send the selected self-invoices to the SdI.
+
+        Each move is sent with `action_l10n_it_edi_send`
+        and committed right after, so that Odoo stays aligned with the SdI
+        even if the request is interrupted (e.g. worker time limit).
+        A move that cannot be sent does not stop the others:
+        the moves already sent stay sent and the next ones are still tried.
+        The reason is shown in the e-invoicing warning of the move
+        (failed export checks, upload errors)
+        or in the final notification (errors raised while sending).
+        """
+        moves = self.filtered(
+            lambda move: move._l10n_it_edi_ext_is_self_invoice_to_send()
+        )
+        if not moves:
+            raise UserError(
+                self.env._(
+                    "None of the selected documents is a self-invoice "
+                    "ready to be sent to the SdI."
+                )
+            )
+
+        error_moves = self.browse()
+        error_messages = []
+        for move in moves:
+            try:
+                # Roll back the changes of the failing move only,
+                # so that they are not committed
+                with self.env.cr.savepoint():
+                    move.action_l10n_it_edi_send()
+            # Catch any error, so that it does not stop the next moves
+            except Exception as error:
+                if not isinstance(error, UserError):
+                    _logger.exception(
+                        "Error while sending %s to the SdI", move.display_name
+                    )
+                # Do not write the error in the move:
+                # another process sending it could have locked it
+                error_moves |= move
+                error_messages.append(f"{move.display_name}: {error}")
+            # Save each move right away, like core e-invoicing localizations
+            # (e.g. l10n_ro_edi, l10n_my_edi): if the request is interrupted,
+            # Odoo still knows which moves the SdI has received.
+            # Committing is safe here because each move is sent independently:
+            # nothing left in the transaction depends on the next moves
+            if self._can_commit():
+                self.env.cr.commit()  # pylint: disable=invalid-commit
+
+        not_sent_moves = moves.filtered(
+            lambda move: not (move.l10n_it_edi_transaction and move.l10n_it_edi_state)
+        )
+        messages = [
+            self.env._(
+                "%(count)s self-invoices sent to the SdI.",
+                count=len(moves - not_sent_moves),
+            )
+        ]
+        if warning_moves := not_sent_moves - error_moves:
+            messages.append(
+                self.env._(
+                    "Not sent, see the warning in each document: %(moves)s.",
+                    moves=", ".join(warning_moves.mapped("display_name")),
+                )
+            )
+        if error_messages:
+            messages.append(
+                self.env._(
+                    "Not sent because of an error: %(errors)s.",
+                    errors="; ".join(error_messages),
+                )
+            )
+        if skipped_moves := self - moves:
+            messages.append(
+                self.env._(
+                    "%(count)s selected documents skipped "
+                    "because they are not self-invoices ready to be sent.",
+                    count=len(skipped_moves),
+                )
+            )
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": self.env._("Send to SDI"),
+                "message": " ".join(messages),
+                "type": "warning" if not_sent_moves else "success",
+                "sticky": bool(not_sent_moves),
+                "next": {"type": "ir.actions.client", "tag": "soft_reload"},
+            },
+        }
+
     # -------------------------------------------------------------------------
     # Helpers
     # -------------------------------------------------------------------------
+
+    def _l10n_it_edi_ext_is_self_invoice(self):
+        """Tell whether the move is sent to the SdI like a self-invoice,
+        with `action_l10n_it_edi_send`."""
+        self.ensure_one()
+        return self.l10n_it_edi_is_self_invoice
+
+    def _l10n_it_edi_ext_is_self_invoice_to_send(self):
+        """Tell whether the move can be sent now with `action_l10n_it_edi_send`.
+
+        Keep in sync with the visibility of the "Send to SDI" button
+        in view `l10n_it_edi.account_invoice_form_l10n_it`
+        and in its extension in this module.
+        """
+        self.ensure_one()
+        return (
+            self._l10n_it_edi_ext_is_self_invoice()
+            and self.state == "posted"
+            and not self.is_move_sent
+            and self.country_code == "IT"
+            and self.l10n_it_edi_state not in ("rejected", "rejected_by_pa_partner")
+            and self._l10n_it_edi_ext_is_document_type_to_send()
+        )
+
+    def _l10n_it_edi_ext_is_document_type_to_send(self):
+        """Tell whether the document type of the move can be sent to the SdI."""
+        self.ensure_one()
+        return self.l10n_it_document_type_code not in ("TD01", "TD04", "TD24")
 
     def _l10n_it_edi_add_base_lines_xml_values(
         self, base_lines_aggregated_values, is_downpayment
@@ -269,24 +397,21 @@ class AccountMoveInherit(models.Model):
     def _l10n_it_edi_get_values(self, pdf_values=None):
         res = super()._l10n_it_edi_get_values(pdf_values)
 
-        causale_list = []
-        if self.narration:
+        causale_lines = []
+        if not is_html_empty(self.narration):
             try:
                 narration_text = html2plaintext(self.narration)
             except Exception:
                 narration_text = ""
 
             # max length of Causale is 200
-            for causale in narration_text.split("\n"):
-                if not causale:
-                    continue
-                causale_list_200 = [
-                    causale[i : i + 200] for i in range(0, len(causale), 200)
-                ]
-                for causale200 in causale_list_200:
-                    causale_list.append(causale200)
+            for line in narration_text.splitlines():
+                if line.strip():
+                    causale_lines.extend(
+                        line[i : i + 200] for i in range(0, len(line), 200)
+                    )
 
-        res["causale"] = causale_list
+        res["causale_lines"] = causale_lines
 
         return res
 
@@ -379,12 +504,12 @@ class AccountMoveInherit(models.Model):
             if not extra_info["simplified"]
             else ".//DatiBeniServizi"
         )
-        if elements_line := body_tree.xpath(tag_name):
-            for element_line in elements_line:
-                self.l10n_it_edi_amount_untaxed += get_float(
-                    element_line, ".//PrezzoTotale"
-                )
+        amount_untaxed = sum(
+            get_float(element_line, ".//PrezzoTotale")
+            for element_line in body_tree.xpath(tag_name)
+        )
 
+        amount_tax = 0.0
         if elements_summary := body_tree.xpath(".//DatiBeniServizi/DatiRiepilogo"):
             self.env["l10n_it_edi.summary_data"].create(
                 [
@@ -408,8 +533,22 @@ class AccountMoveInherit(models.Model):
                     for element_summary in elements_summary
                 ]
             )
-            for element_summary in elements_summary:
-                self.l10n_it_edi_amount_tax += get_float(element_summary, ".//Imposta")
+            amount_tax = sum(
+                get_float(element_summary, ".//Imposta")
+                for element_summary in elements_summary
+            )
+
+        # Single batch write replaces N+M per-iteration writes from the
+        # previous "self.field += value" accumulation loops.
+        # skip_invoice_sync avoids _sync_dynamic_lines firing on a write
+        # that only touches XML-derived header amounts.
+        if amount_untaxed or amount_tax:
+            self.with_context(skip_invoice_sync=True).write(
+                {
+                    "l10n_it_edi_amount_untaxed": amount_untaxed,
+                    "l10n_it_edi_amount_tax": amount_tax,
+                }
+            )
 
         return extra_info, message_to_log
 
@@ -1007,45 +1146,62 @@ class AccountMoveInherit(models.Model):
                 if vals:
                     partner_bank.write(vals)
 
+    def _l10n_it_edi_extension_notify_merged_invoices(self, invoice, xml_tree):
+        """Core imports every FatturaElettronicaBody of the file
+        in the same `invoice`: say so in its chatter."""
+        bodies = xml_tree.xpath("//FatturaElettronicaBody")
+        if len(bodies) <= 1:
+            return
+        numbers = [get_text(body, ".//DatiGeneraliDocumento/Numero") for body in bodies]
+        invoice.sudo().message_post(
+            body=self.env._(
+                "The e-invoice file contains %(count)s invoices (%(numbers)s): "
+                "they have been merged into this single document.",
+                count=len(bodies),
+                numbers=", ".join(numbers),
+            )
+        )
+
     def _l10n_it_edi_import_invoice(self, invoice, data, is_new):
         invoice = super()._l10n_it_edi_import_invoice(invoice, data, is_new)
+        if not invoice:
+            return invoice
 
         body_tree = data.get("xml_tree")
+        if body_tree is not None:
+            self._l10n_it_edi_extension_notify_merged_invoices(invoice, body_tree)
         is_incoming = self.is_purchase_document(include_receipts=True)
-        if invoice:
-            import_detail_level = (
-                invoice.partner_id.l10n_it_edi_import_detail_level
-                or invoice.company_id.l10n_it_edi_import_detail_level
-            )
-            if import_detail_level == "min":
-                # Delete all lines - Odoo creates them in the import loop
-                # but we don't want any for minimum detail level
-                invoice.invoice_line_ids.unlink()
-            elif import_detail_level == "tax":
-                # Delete all lines created by Odoo and create summary lines instead
-                invoice.invoice_line_ids.unlink()
-                if body_tree is not None:
-                    # Ignore these messages
-                    # because they have already been logged
-                    # when this method was executed during super's import
-                    extra_info, _messages = self._l10n_it_edi_get_extra_info(
-                        invoice.company_id,
-                        get_text(body_tree, "//DatiGeneraliDocumento/TipoDocumento"),
-                        body_tree,
-                        incoming=is_incoming,
+        import_detail_level = (
+            invoice.partner_id.l10n_it_edi_import_detail_level
+            or invoice.company_id.l10n_it_edi_import_detail_level
+        )
+        if import_detail_level == "min":
+            # Delete all lines - Odoo creates them in the import loop
+            # but we don't want any for minimum detail level
+            invoice.invoice_line_ids.unlink()
+        elif import_detail_level == "tax":
+            # Delete all lines created by Odoo and create summary lines instead
+            invoice.invoice_line_ids.unlink()
+            if body_tree is not None:
+                # Ignore these messages
+                # because they have already been logged
+                # when this method was executed during super's import
+                extra_info, _messages = self._l10n_it_edi_get_extra_info(
+                    invoice.company_id,
+                    get_text(body_tree, "//DatiGeneraliDocumento/TipoDocumento"),
+                    body_tree,
+                    incoming=is_incoming,
+                )
+                for summary_line in body_tree.xpath(".//DatiBeniServizi/DatiRiepilogo"):
+                    messages = invoice._l10n_it_edi_ext_import_summary_line(
+                        summary_line,
+                        extra_info=extra_info,
                     )
-                    for summary_line in body_tree.xpath(
-                        ".//DatiBeniServizi/DatiRiepilogo"
-                    ):
-                        messages = invoice._l10n_it_edi_ext_import_summary_line(
-                            summary_line,
-                            extra_info=extra_info,
-                        )
-                        for message in messages:
-                            invoice.sudo().message_post(body=message)
+                    for message in messages:
+                        invoice.sudo().message_post(body=message)
 
         partner_role = "seller" if is_incoming else "buyer"
-        if invoice and invoice.partner_id:
+        if invoice.partner_id:
             if not invoice.partner_id.l10n_edi_it_electronic_invoice_no_contact_update:
                 # Core creates the partner; fill the FatturaPA extras core
                 # leaves out (Provincia, EORI, Albo*, firstname/lastname) on
@@ -1055,15 +1211,13 @@ class AccountMoveInherit(models.Model):
                 )
             self._l10n_it_edi_extension_update_partner_bank(body_tree, invoice)
 
-        if invoice and (
-            tax_representative := self._l10n_it_edi_extension_create_partner(
-                body_tree,
-                "tax_representative",
-            )
+        if tax_representative := self._l10n_it_edi_extension_create_partner(
+            body_tree,
+            "tax_representative",
         ):
             invoice.l10n_it_edi_tax_representative_id = tax_representative
 
-        if invoice and (attachment := data["attachment"]):
+        if attachment := data["attachment"]:
             invoice.l10n_it_edi_ext_attachment_in_id = attachment.id
 
         return invoice

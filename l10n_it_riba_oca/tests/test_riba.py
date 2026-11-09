@@ -2,13 +2,16 @@
 # ©  2015 Apulia Software srl
 # Copyright (C) 2017 Lorenzo Battistini - Agile Business Group
 # Copyright 2023 Simone Rubino - Aion Tech
+# Copyright 2025 Simone Rubino - PyTech
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import base64
 import datetime
 import os
 
-from odoo import Command
+from dateutil.relativedelta import relativedelta
+
+from odoo import Command, fields
 from odoo.exceptions import UserError
 from odoo.fields import first
 from odoo.tests import Form
@@ -44,19 +47,81 @@ class TestInvoiceDueCost(riba_common.TestRibaCommon):
         new_inv = self.invoice.copy()
         self.assertEqual(len(new_inv.invoice_line_ids), 1)
 
+    def test_add_due_cost_from_list_confirm(self):
+        """Collection fees are added when confirming from the list view.
+
+        Regression test for https://github.com/OCA/l10n-italy/issues/5063:
+        when invoices are confirmed in batch from the list view through the
+        "Confirm Entries" wizard, the collection fees must be added. Before
+        this fix the fee-adding logic lived in action_post() only, so it was
+        skipped because the wizard posts the moves calling _post() directly.
+        """
+        self.invoice.company_id.due_cost_service_id = self.service_due_cost.id
+        # Reproduce the list-view "Confirm Entries" action: the wizard posts
+        # the selected moves calling _post() (not action_post()).
+        wizard = (
+            self.env["validate.account.move"]
+            .with_context(active_model="account.move", active_ids=self.invoice.ids)
+            .create({})
+        )
+        wizard.validate_move()
+        self.assertEqual(self.invoice.state, "posted")
+        # The invoice has 3 lines: 1 product + 2 collection fees (one per due
+        # date).
+        self.assertEqual(len(self.invoice.invoice_line_ids), 3)
+        self.assertEqual(
+            self.invoice.invoice_line_ids[1].product_id, self.service_due_cost
+        )
+        self.assertEqual(
+            self.invoice.invoice_line_ids[2].product_id, self.service_due_cost
+        )
+        # The two collection fees total 10.00 (5.00 x 2 due dates).
+        self.assertEqual(
+            self.invoice.invoice_line_ids[1].price_unit
+            + self.invoice.invoice_line_ids[2].price_unit,
+            10.00,
+        )
+
     def test_not_add_due_cost(self):
         # create 2 invoice for partner in same month on the second one no
         # collection fees line expected
         # ---- Set Service in Company Config
         self.invoice.company_id.due_cost_service_id = self.service_due_cost.id
+        # ---- Day 10 of next month: the first due date of the invoice (30 days)
+        # ---- always falls in the same month of the one of invoice2 (end of
+        # ---- month + 1 day), and all the due dates are in the future
+        invoice_date = fields.Date.today() + relativedelta(months=1, day=10)
+        self.invoice.invoice_date = invoice_date
         # ---- Validate Invoice
         self.invoice.action_post()
 
         self.invoice2.invoice_payment_term_id = self.payment_term2
+        self.invoice2.invoice_date = invoice_date
         self.invoice2.action_post()
         # ---- Test Invoice has 1 line, no collection fees added because it's added on
         # ---- first due date for partner
         self.assertEqual(len(self.invoice2.invoice_line_ids), 1)
+
+    def test_add_due_cost_same_month(self):
+        # create 2 invoice for partner in same month on the second one no
+        # collection fees line expected
+        self.invoice.partner_id.riba_policy_expenses = "unlimited"
+        self.invoice.company_id.due_cost_service_id = self.service_due_cost.id
+        # Validate Invoice with payment 30/60
+        self.invoice.action_post()
+        # Validate Invoice with payment 30
+        self.invoice2.invoice_payment_term_id = self.payment_term2
+        self.invoice2.action_post()
+        # Test Invoice 2 has 2 lines (1 for due cost)
+        self.assertEqual(len(self.invoice2.invoice_line_ids), 2)
+
+    def test_not_add_due_cost_for_partner_exclude_expense(self):
+        self.invoice.company_id.due_cost_service_id = self.service_due_cost.id
+        self.invoice.partner_id.riba_exclude_expenses = True
+        self.invoice.action_post()
+        # Test Invoice has 1 line, no collection fees added because
+        # the partner is excluded from due costs
+        self.assertEqual(len(self.invoice.invoice_line_ids), 1)
 
     def test_delete_due_cost_line(self):
         # ---- Set Service in Company Config
@@ -293,8 +358,9 @@ class TestInvoiceDueCost(riba_common.TestRibaCommon):
         self.assertEqual(len(riba_list.line_ids), 2)
         self.assertEqual(riba_list.line_ids[0].state, "past_due")
         self.assertTrue(self.invoice.past_due_move_line_ids)
-        # invoice should be partial paid
-        self.assertEqual(self.invoice.payment_state, "partial")
+        # the past due account is not the receivable account of the invoice:
+        # the invoice stays paid and the credit is on the past due account
+        self.assertEqual(self.invoice.payment_state, "paid")
 
     def test_past_due_riba(self):
         """
@@ -983,9 +1049,11 @@ class TestInvoiceDueCost(riba_common.TestRibaCommon):
 
         # Find the bank fee line
         bank_fee_line = past_due_move.line_ids.filtered(
-            lambda line: line.name == "Bank Fee"
-            and line.account_id == past_due_wizard.bank_expense_account_id
-            and line.debit > 0
+            lambda line: (
+                line.name == "Bank Fee"
+                and line.account_id == past_due_wizard.bank_expense_account_id
+                and line.debit > 0
+            )
         )
 
         # Assert that partner_id is set
@@ -1024,9 +1092,11 @@ class TestInvoiceDueCost(riba_common.TestRibaCommon):
 
         # Find the bank fee line
         bank_fee_line = past_due_move.line_ids.filtered(
-            lambda line: line.name == "Bank Fee"
-            and line.account_id == past_due_wizard.bank_expense_account_id
-            and line.debit > 0
+            lambda line: (
+                line.name == "Bank Fee"
+                and line.account_id == past_due_wizard.bank_expense_account_id
+                and line.debit > 0
+            )
         )
 
         # Assert that partner_id is not set
@@ -1034,4 +1104,295 @@ class TestInvoiceDueCost(riba_common.TestRibaCommon):
         self.assertFalse(
             bank_fee_line.partner_id,
             "Bank fee line should not have partner_id when charge_to_customer is False",
+        )
+
+    def test_set_acceptance_date(self):
+        """The acceptance date is propagated to the acceptance move."""
+        # Arrange
+        company = self.env.company
+        company.due_cost_service_id = self.service_due_cost
+        riba_configuration = self.riba_config_sbf
+
+        invoice = self._create_invoice()
+        invoice.action_post()
+        acceptance_date = invoice.date + relativedelta(days=7)
+
+        to_issue_action = self.env.ref("l10n_it_riba_oca.action_riba_to_issue")
+        to_issue_records = self.env[to_issue_action.res_model].search(
+            safe_eval.safe_eval(to_issue_action.domain)
+        )
+        invoice_to_issue_records = to_issue_records & invoice.line_ids
+        self.assertTrue(invoice_to_issue_records)
+
+        issue_wizard_model = self.env["riba.issue"].with_context(
+            active_model=invoice_to_issue_records._name,
+            active_ids=invoice_to_issue_records.ids,
+        )
+        issue_wizard_form = Form(issue_wizard_model)
+        issue_wizard_form.configuration_id = riba_configuration
+        issue_wizard = issue_wizard_form.save()
+        issue_result = issue_wizard.create_list()
+        slip = self.env[issue_result["res_model"]].browse(issue_result["res_id"])
+        with Form(slip) as slip_form:
+            slip_form.date_accepted = acceptance_date
+        # pre-condition
+        self.assertEqual(slip.date_accepted, acceptance_date)
+        self.assertFalse(slip.acceptance_move_ids)
+
+        # Act
+        slip.confirm()
+
+        # Assert
+        acceptance_moves = slip.acceptance_move_ids
+        self.assertFalse(
+            acceptance_moves,
+            "The cache is fixed! Remove cache invalidation",
+        )
+        slip.invalidate_recordset(
+            fnames=[
+                "acceptance_move_ids",
+            ]
+        )
+
+        acceptance_moves = slip.acceptance_move_ids
+        self.assertTrue(acceptance_moves)
+        self.assertEqual(
+            acceptance_moves.mapped("date"), [acceptance_date] * len(acceptance_moves)
+        )
+        acceptance_lines = acceptance_moves.line_ids
+        self.assertTrue(acceptance_lines)
+        self.assertEqual(
+            acceptance_lines.mapped("date"), [acceptance_date] * len(acceptance_lines)
+        )
+
+    def _issue_riba_incasso(self, invoice):
+        """Issue and accept a slip 'After collection' for `invoice`."""
+        to_issue_action = self.env.ref("l10n_it_riba_oca.action_riba_to_issue")
+        to_issue_records = (
+            self.env[to_issue_action.res_model].search(
+                safe_eval.safe_eval(to_issue_action.domain)
+            )
+            & invoice.line_ids
+        )
+        issue_wizard_form = Form(
+            self.env["riba.issue"].with_context(
+                active_model=to_issue_records._name,
+                active_ids=to_issue_records.ids,
+            )
+        )
+        issue_wizard_form.configuration_id = self.riba_config_incasso
+        issue_result = issue_wizard_form.save().create_list()
+        riba_list = self.env[issue_result["res_model"]].browse(issue_result["res_id"])
+        riba_list.confirm()
+        return riba_list
+
+    def _past_due_wizard(self, slip_line, vals=None):
+        return (
+            self.env["riba.past_due"]
+            .with_context(
+                active_model="riba.slip.line",
+                active_ids=slip_line.ids,
+                active_id=slip_line.id,
+            )
+            .create(vals or {})
+        )
+
+    def test_riba_incasso_past_due_fees_accounts(self):
+        """The fees accounts are only needed to record past due fees."""
+        # Arrange
+        self.invoice.company_id.due_cost_service_id = self.service_due_cost
+        self.invoice.action_post()
+        slip_line = self._issue_riba_incasso(self.invoice).line_ids[0]
+        # pre-condition
+        self.assertFalse(self.riba_config_incasso.bank_account_id)
+        wizard = self._past_due_wizard(slip_line, {"past_due_fee_amount": 5})
+
+        # Act & Assert: the fees cannot be recorded without the A/C bank account
+        with self.assertRaises(UserError) as error:
+            wizard.create_move()
+        self.assertIn("A/C bank account", error.exception.args[0])
+
+        # Act & Assert: without fees, the fees accounts are not needed
+        wizard.write({"past_due_fee_amount": 0, "bank_expense_account_id": False})
+        wizard.create_move()
+        self.assertEqual(slip_line.state, "past_due")
+
+    def test_riba_sbf_past_due_skip_credited(self):
+        """The past due of a credited slip cannot be skipped."""
+        # Arrange
+        _invoice, riba_list = self.riba_sbf_common()
+        slip_line = riba_list.line_ids
+        acceptance_move = slip_line.acceptance_move_id
+        wizard = self._past_due_wizard(slip_line)
+        # pre-condition: the skip is hidden in the wizard
+        self.assertTrue(wizard.credited)
+
+        # Act
+        with self.assertRaises(UserError):
+            wizard.skip()
+
+        # Assert
+        self.assertTrue(acceptance_move.exists())
+        self.assertEqual(slip_line.state, "credited")
+
+    def test_riba_sbf_past_due_skip_not_credited(self):
+        """The past due of a slip not credited yet can be skipped."""
+        # Arrange
+        invoice = self._create_sbf_invoice()
+        invoice._onchange_riba_partner_bank_id()
+        invoice.action_post()
+        riba_move_line = invoice.line_ids.filtered(
+            lambda line: line.account_id == self.account_rec1_id
+        )
+        issue_wizard = self.env["riba.issue"].create(
+            {"configuration_id": self.riba_config_sbf.id}
+        )
+        action = issue_wizard.with_context(active_ids=riba_move_line.ids).create_list()
+        riba_list = self.slip_model.browse(action["res_id"])
+        riba_list.confirm()
+        slip_line = riba_list.line_ids
+        acceptance_move = slip_line.acceptance_move_id
+        # pre-condition
+        self.assertEqual(riba_list.state, "accepted")
+        self.assertEqual(invoice.payment_state, "paid")
+        wizard = self._past_due_wizard(slip_line)
+        self.assertFalse(wizard.credited)
+
+        # Act
+        wizard.skip()
+
+        # Assert: the acceptance entry is deleted and the invoice is due again
+        self.assertFalse(acceptance_move.exists())
+        self.assertEqual(slip_line.state, "past_due")
+        self.assertEqual(riba_list.state, "past_due")
+        self.assertEqual(invoice.payment_state, "not_paid")
+
+    def test_riba_incasso_past_due_keeps_payments(self):
+        """The past due only unlinks the invoice from the acceptance entry."""
+        # Arrange: the largest due date of the invoice is partially paid
+        self.invoice.company_id.due_cost_service_id = self.service_due_cost
+        self.invoice.action_post()
+        due_line = self.invoice.line_ids.filtered(
+            lambda line: line.display_type == "payment_term"
+        ).sorted("debit")[-1]
+        payment = self.env["account.move"].create(
+            {
+                "journal_id": self.bank_journal.id,
+                "line_ids": [
+                    Command.create(
+                        {
+                            "account_id": due_line.account_id.id,
+                            "partner_id": self.partner.id,
+                            "credit": 10,
+                        }
+                    ),
+                    Command.create(
+                        {
+                            "account_id": self.bank_account.id,
+                            "debit": 10,
+                        }
+                    ),
+                ],
+            }
+        )
+        payment.action_post()
+        payment_line = payment.line_ids.filtered(
+            lambda line: line.account_id == due_line.account_id
+        )
+        (due_line | payment_line).reconcile()
+        riba_list = self._issue_riba_incasso(self.invoice)
+        slip_line = riba_list.line_ids.filtered(
+            lambda line: due_line in line.move_line_ids.move_line_id
+        )
+
+        # Act: the past due account is the receivable account of the invoice,
+        # so the invoice is unlinked from the acceptance entry
+        self._past_due_wizard(
+            slip_line, {"overdue_credit_account_id": due_line.account_id.id}
+        ).create_move()
+
+        # Assert
+        matched_lines = due_line.matched_credit_ids.credit_move_id
+        self.assertIn(payment_line, matched_lines)
+        self.assertFalse(matched_lines & slip_line.acceptance_move_id.line_ids)
+        self.assertEqual(self.invoice.payment_state, "partial")
+
+    def test_riba_sbf_past_due_separate_account(self):
+        """With a separate past due account the invoice stays paid."""
+        # Arrange
+        invoice, riba_list = self.riba_sbf_common()
+        slip_line = riba_list.line_ids
+        # pre-condition
+        self.assertNotEqual(self.past_due_account, self.account_rec1_id)
+
+        # Act
+        self._past_due_wizard(slip_line).create_move()
+
+        # Assert: the credit is only on the past due account
+        self.assertEqual(invoice.payment_state, "paid")
+        past_due_line = slip_line.past_due_move_id.line_ids.filtered(
+            lambda line: line.account_id == self.past_due_account
+        )
+        self.assertEqual(past_due_line.partner_id, invoice.partner_id)
+        self.assertEqual(past_due_line.amount_residual, slip_line.amount)
+        self.assertIn(past_due_line, invoice.past_due_move_line_ids)
+
+    def test_riba_sbf_past_due_receivable_account(self):
+        """With the receivable account as past due account the invoice is due."""
+        # Arrange
+        invoice, riba_list = self.riba_sbf_common()
+        slip_line = riba_list.line_ids
+        wizard = self._past_due_wizard(
+            slip_line, {"overdue_credit_account_id": self.account_rec1_id.id}
+        )
+
+        # Act
+        wizard.create_move()
+
+        # Assert: the past due entry replaces the acceptance entry in closing
+        # the credit on the receivable account, and the invoice is due again
+        self.assertEqual(invoice.payment_state, "not_paid")
+        receivable_lines = (
+            slip_line.acceptance_move_id.line_ids | slip_line.past_due_move_id.line_ids
+        ).filtered(lambda line: line.account_id == self.account_rec1_id)
+        self.assertEqual(len(receivable_lines), 2)
+        self.assertTrue(all(receivable_lines.mapped("reconciled")))
+
+    def test_add_due_cost_different_month(self):
+        """Post two invoices for the same partner with due dates in different months.
+
+        Regression test for https://github.com/OCA/l10n-italy/issues/4637:
+        the month check must ignore the due dates of the invoice being posted,
+        otherwise the collection fees are never added after the first invoice.
+        """
+        today = fields.Date.today()
+        self.invoice.company_id.due_cost_service_id = self.service_due_cost.id
+        self.invoice.invoice_date = today
+        self.invoice.action_post()
+        first_due_months = {
+            (d.year, d.month)
+            for d in self.invoice.line_ids.filtered(
+                lambda line: line.display_type == "payment_term"
+            ).mapped("date_maturity")
+        }
+        self.assertEqual(len(self.invoice.invoice_line_ids), 3)
+        self.invoice2.invoice_payment_term_id = self.payment_term2
+        self.invoice2.invoice_date = today + relativedelta(months=4)
+        second_due_months = {
+            (d.year, d.month)
+            for d in self.invoice2.line_ids.filtered(
+                lambda line: line.display_type == "payment_term"
+            ).mapped("date_maturity")
+        }
+        # pre-condition: no overlap between due months of the two invoices
+        self.assertFalse(first_due_months & second_due_months)
+        self.invoice2.action_post()
+        self.assertEqual(
+            self.invoice2.partner_id.commercial_partner_id.riba_policy_expenses,
+            "one_a_month",
+        )
+        self.assertEqual(
+            len(self.invoice2.invoice_line_ids),
+            2,
+            "collection fees missing on second invoice",
         )

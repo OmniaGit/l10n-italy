@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo.exceptions import UserError
+from odoo.fields import Command
 from odoo.tests import Form, new_test_user
 
 from .delivery_note_common import StockDeliveryNoteCommon
@@ -223,3 +224,87 @@ class StockDeliveryNote(StockDeliveryNoteCommon):
 
         delivery_note_id.partner_ref = "Reference #1234"
         delivery_note_id.action_confirm()
+
+    def test_ddt_line_amount(self):
+        user = new_test_user(
+            self.env,
+            login="test",
+            groups="stock.group_stock_manager",
+        )
+
+        self.env.user = user
+
+        sales_order = self.create_sales_order(
+            [
+                self.large_desk_line,  # 1
+                self.desk_combination_line,  # 1
+            ],
+        )
+
+        tax_id = self.env["account.tax"].search(
+            [("type_tax_use", "=", "sale")], limit=1
+        )
+
+        for line in sales_order.order_line:
+            line.tax_id = [Command.set(tax_id.ids)]
+
+        sales_order.action_confirm()
+        picking = sales_order.picking_ids
+
+        # deliver all the products
+        for move_line in picking.move_ids:
+            move_line.quantity = 1
+
+        picking.button_validate()
+        dn_form = Form(
+            self.env["stock.delivery.note.create.wizard"].with_context(
+                **{"active_id": picking.id, "active_ids": picking.ids}
+            )
+        )
+        dn = dn_form.save()
+        dn.confirm()
+
+        delivery_note_id = picking.delivery_note_id
+        for note_line in delivery_note_id.line_ids:
+            self.assertEqual(
+                note_line.price_unit * note_line.product_qty, note_line.untaxed_amount
+            )
+            self.assertNotEqual(note_line.untaxed_amount, note_line.amount)
+
+    def test_split_transfer_with_delivery_note(self):
+        #
+        #     Picking ┐
+        #             ├ DdT
+        #     Picking ┘ (backorder, no DdT)
+        #
+        # `action_split_transfer` calls `_create_backorder(backorder_moves=...)`:
+        # the override must accept the keyword argument.
+        user = new_test_user(
+            self.env,
+            login="test",
+            groups="stock.group_stock_manager",
+        )
+        self.env.user = user
+        StockPicking = self.env["stock.picking"]
+
+        picking = self.create_picking()
+        picking.move_ids.product_uom_qty = 2
+        picking.action_confirm()
+
+        delivery_note = self.create_delivery_note()
+        picking.delivery_note_id = delivery_note
+        self.assertEqual(delivery_note.line_ids.move_id, picking.move_ids)
+
+        # process only a part of the demand and split the rest in a backorder
+        picking.move_ids.quantity = 1
+        picking.action_split_transfer()
+
+        picking_backorder = StockPicking.search([("backorder_id", "=", picking.id)])
+        self.assertEqual(len(picking_backorder), 1)
+        self.assertFalse(picking_backorder.delivery_note_id)
+
+        # the delivery note still details the moves left on the original picking
+        self.assertEqual(delivery_note.line_ids.move_id, picking.move_ids)
+        self.assertNotIn(
+            picking_backorder.move_ids, delivery_note.mapped("line_ids.move_id")
+        )

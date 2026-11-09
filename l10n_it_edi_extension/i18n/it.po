@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-29 12:20+0000\n"
-"PO-Revision-Date: 2026-03-29 14:21+0200\n"
+"PO-Revision-Date: 2026-11-08 17:46+0000\n"
 "Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: none\n"
 "Language: it\n"
@@ -15,7 +15,23 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Weblate 5.15.2\n"
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid ""
+"%(count)s selected documents skipped because they are not self-invoices "
+"ready to be sent."
+msgstr ""
+"%(count)s documenti selezionati sono stati esclusi perché non si tratta di "
+"autofatture pronte per l'invio."
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "%(count)s self-invoices sent to the SdI."
+msgstr "%(count)s autofatture inviate allo SDI."
 
 #. module: l10n_it_edi_extension
 #: model_terms:ir.ui.view,arch_db:l10n_it_edi_extension.view_account_config_settings_create_partner
@@ -297,6 +313,12 @@ msgid "Do not update the contact from Electronic Invoice Details"
 msgstr "Non aggiornare il contatto dai dati della fattura elettronica"
 
 #. module: l10n_it_edi_extension
+#: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_bank_statement_line__l10n_it_document_type_code
+#: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_move__l10n_it_document_type_code
+msgid "Document Type Code"
+msgstr "Codice tipo documento"
+
+#. module: l10n_it_edi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_bank_statement_line__l10n_it_edi_activity_progress_ids
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_move__l10n_it_edi_activity_progress_ids
 msgid "E-Invoice Activity Progress"
@@ -549,11 +571,6 @@ msgid "Invoice Line"
 msgstr "Riga fattura"
 
 #. module: l10n_it_edi_extension
-#: model:ir.model,name:l10n_it_edi_extension.model_account_journal
-msgid "Journal"
-msgstr "Registro"
-
-#. module: l10n_it_edi_extension
 #: model:ir.model,name:l10n_it_edi_extension.model_account_move
 msgid "Journal Entry"
 msgstr "Registrazione contabile"
@@ -728,6 +745,27 @@ msgstr "Natura"
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_l10n_it_edi_summary_data__non_taxable_nature
 msgid "Non taxable nature"
 msgstr "Natura esenzione"
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid ""
+"None of the selected documents is a self-invoice ready to be sent to the SdI."
+msgstr ""
+"Nessuno dei documenti selezionati è un'autofattura pronta per essere inviata "
+"al SDI."
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "Not sent because of an error: %(errors)s."
+msgstr "Non inviato a causa di un errore: %(errors)s."
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "Not sent, see the warning in each document: %(moves)s."
+msgstr "Non inviato; si veda l'avviso in ciascun documento: %(moves)s."
 
 #. module: l10n_it_edi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_res_city_it_code__notes
@@ -1006,6 +1044,17 @@ msgid "Sale Provision Type"
 msgstr "Tipo cessione prestazione"
 
 #. module: l10n_it_edi_extension
+#: model_terms:ir.ui.view,arch_db:l10n_it_edi_extension.account_invoice_list_l10n_it_inherit_view
+msgid "Send self-invoices to SDI"
+msgstr "Inviare autofatture allo SDI"
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "Send to SDI"
+msgstr "Invia allo SDI"
+
+#. module: l10n_it_edi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_bank_statement_line__l10n_it_edi_sender
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_move__l10n_it_edi_sender
 msgid "Sender"
@@ -1098,6 +1147,16 @@ msgid "Text Reference"
 msgstr "Riferimento testo"
 
 #. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid ""
+"The e-invoice file contains %(count)s invoices (%(numbers)s): they have been "
+"merged into this single document."
+msgstr ""
+"Il file della fattura elettronica contiene %(count)s fatture (%(numbers)s): "
+"sono state accorpate in questo unico documento."
+
+#. module: l10n_it_edi_extension
 #: model:ir.model.fields,help:l10n_it_edi_extension.field_res_company__l10n_edi_it_stable_organization
 msgid ""
 "The fields must be entered only when the seller/provider is non-resident, "
@@ -1187,6 +1246,12 @@ msgstr ""
 "L'importo non tassato (%(amount_untaxed)s}) meno l'arrotondamento (%"
 "(rounding)s}) non corrisponde all'importo non tassato della e-fattura %"
 "(edi_amount_untaxed)s)"
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/tests/test_send_self_invoices.py:0
+msgid "Upload failed"
+msgstr "Caricamento fallito"
 
 #. module: l10n_it_edi_extension
 #: model:ir.model.fields,help:l10n_it_edi_extension.field_res_partner__l10n_it_edi_ext_default_product_id
@@ -1379,6 +1444,9 @@ msgstr ""
 #: code:addons/l10n_it_edi_extension/__init__.py:0
 msgid "from XML file:"
 msgstr "da file XML:"
+
+#~ msgid "Journal"
+#~ msgstr "Registro"
 
 #~ msgid ""
 #~ "Automatically create the partner if it does not exist during the import "

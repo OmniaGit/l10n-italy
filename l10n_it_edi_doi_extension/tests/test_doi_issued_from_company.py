@@ -3,7 +3,7 @@
 
 from dateutil.relativedelta import relativedelta
 
-from odoo import fields
+from odoo import exceptions, fields
 from odoo.tests import Form
 from odoo.tests.common import TransactionCase
 
@@ -226,16 +226,81 @@ class TestDoiIssuedFromCompany(TransactionCase):
         expected_total = 300.0 + invoice2.amount_total
         self.assertEqual(self.doi_in.invoiced, expected_total)
 
-    def test_synchronization_standard_field_to_list(self):
-        """Test that standard field changes sync to multi-declaration list."""
-        invoice = self._create_invoice("9", self.partner, taxes=self.tax, in_type=True)
+    def test_sync_doi_id_on_bridge_create(self):
+        """Test that l10n_it_edi_doi_id is synced when a bridge record is created."""
+        invoice = self._create_invoice("9", self.partner, in_type=True)
+        # No bridge records yet — invoice may already have doi_id from auto-assign,
+        # so we clear it first to test the sync in isolation
+        invoice.l10n_it_edi_doi_id = False
 
-        # Standard field should auto-populate
+        self.env["account.move.doi"].create(
+            {"move_id": invoice.id, "declaration_id": self.doi_in.id, "amount": 0}
+        )
         self.assertEqual(invoice.l10n_it_edi_doi_id, self.doi_in)
 
-        # Should have created bridge record via onchange
-        # (Note: onchange may not fire in tests without Form)
-        # This tests the intended behavior when using the UI
+    def test_sync_doi_id_on_bridge_write(self):
+        """Test that l10n_it_edi_doi_id is updated when declaration_id is changed."""
+        doi_in_2 = self._create_declaration("in")
+        invoice = self._create_invoice("9b", self.partner, in_type=True)
+        invoice.l10n_it_edi_doi_id = False
+
+        bridge = self.env["account.move.doi"].create(
+            {"move_id": invoice.id, "declaration_id": self.doi_in.id, "amount": 0}
+        )
+        self.assertEqual(invoice.l10n_it_edi_doi_id, self.doi_in)
+
+        bridge.declaration_id = doi_in_2
+        self.assertEqual(invoice.l10n_it_edi_doi_id, doi_in_2)
+
+    def test_sync_doi_id_on_bridge_unlink_last(self):
+        """Test that l10n_it_edi_doi_id becomes False when last bridge is removed."""
+        invoice = self._create_invoice("9c", self.partner, in_type=True)
+        invoice.l10n_it_edi_doi_id = False
+
+        bridge = self.env["account.move.doi"].create(
+            {"move_id": invoice.id, "declaration_id": self.doi_in.id, "amount": 0}
+        )
+        self.assertEqual(invoice.l10n_it_edi_doi_id, self.doi_in)
+
+        bridge.unlink()
+        self.assertFalse(invoice.l10n_it_edi_doi_id)
+
+    def test_sync_doi_id_on_bridge_unlink_first(self):
+        """Test that l10n_it_edi_doi_id points to next bridge after first is removed."""
+        doi_in_2 = self._create_declaration("in")
+        invoice = self._create_invoice("9d", self.partner, in_type=True)
+        invoice.l10n_it_edi_doi_id = False
+
+        bridge1 = self.env["account.move.doi"].create(
+            {"move_id": invoice.id, "declaration_id": self.doi_in.id, "sequence": 10}
+        )
+        self.env["account.move.doi"].create(
+            {"move_id": invoice.id, "declaration_id": doi_in_2.id, "sequence": 20}
+        )
+        self.assertEqual(invoice.l10n_it_edi_doi_id, self.doi_in)
+
+        bridge1.unlink()
+        self.assertEqual(invoice.l10n_it_edi_doi_id, doi_in_2)
+
+    def test_declaration_available_reflects_remaining(self):
+        """
+        Test that declaration_available uses remaining (which includes not_yet_invoiced)
+        """
+        invoice = self._create_invoice("9e", self.partner, taxes=self.tax, in_type=True)
+        bridge = self.env["account.move.doi"].create(
+            {"move_id": invoice.id, "declaration_id": self.doi_in.id, "amount": 200.0}
+        )
+
+        # Before posting: remaining == threshold (no invoiced yet)
+        self.assertEqual(bridge.declaration_available, self.doi_in.remaining)
+
+        # Post invoice so invoiced amount increases
+        invoice.action_post()
+
+        # After posting: remaining is reduced, available should reflect that
+        # threshold=5000, bridge amount=200 → invoiced=200 → remaining=4800
+        self.assertEqual(bridge.declaration_available, self.doi_in.remaining)
+        self.assertEqual(bridge.declaration_available, 5000 - 200)
 
     def test_action_open_declaration_multiple(self):
         """Test action_open_declaration_of_intent with multiple declarations."""
@@ -434,8 +499,74 @@ class TestDoiIssuedFromCompany(TransactionCase):
         )
 
         previous_used_amount = self.doi_in.invoiced
+        with self.assertRaises(exceptions.UserError) as ue:
+            invoice.action_post()
+        exc_message = ue.exception.args[0]
+        self.assertIn("cannot include other Taxes", exc_message)
+        self.assertIn(self.tax.name, exc_message)
+
+        invoice.invoice_line_ids.tax_ids -= tax2
         invoice.action_post()
         used_amount = self.doi_in.invoiced
         self.assertNotEqual(previous_used_amount, used_amount)
         self.assertEqual(used_amount, invoice.amount_total)
         self.assertEqual(self.doi_in.state, "active")
+
+    def test_in_invoice_mixed_tax(self):
+        """When a vendor bill has a line with only the DoI Tax
+        and another line with only other Taxes, it can be posted."""
+        # Arrange
+        company = self.company
+        default_tax = company.account_purchase_tax_id
+        doi_tax = company.l10n_it_edi_doi_bill_tax_id
+        bill = self._create_invoice("1", self.partner, taxes=doi_tax, in_type=True)
+        with Form(bill) as bill_form:
+            self._add_invoice_line_id(bill_form, taxes=default_tax)
+        # pre-condition
+        self.assertTrue(all((default_tax, doi_tax)))
+        self.assertNotEqual(default_tax, doi_tax)
+        self.assertRecordValues(
+            bill.invoice_line_ids,
+            [
+                {
+                    "tax_ids": doi_tax.ids,
+                    "price_total": 900,
+                },
+                {
+                    "tax_ids": default_tax.ids,
+                    "price_total": default_tax.compute_all(900)["total_included"],
+                },
+            ],
+        )
+
+        # Act
+        bill.action_post()
+
+        # Assert
+        self.assertRecordValues(
+            bill,
+            [
+                {
+                    "l10n_it_edi_doi_amount": 900,
+                }
+            ],
+        )
+
+    def test_in_invoice_no_doi_tax(self):
+        """When a vendor bill has no line with the DoI Tax
+        and is linked to a DoI, it cannot be posted."""
+        # Arrange
+        company = self.company
+        doi_tax = company.l10n_it_edi_doi_bill_tax_id
+        bill = self._create_invoice("1", self.partner, in_type=True)
+        # pre-condition
+        self.assertTrue(bill.l10n_it_edi_doi_id)
+        self.assertNotIn(doi_tax, bill.line_ids.tax_ids)
+
+        # Act
+        with self.assertRaises(exceptions.UserError) as ue:
+            bill.action_post()
+
+        # Assert
+        exc_message = ue.exception.args[0]
+        self.assertIn("one line should contain the Tax", exc_message)

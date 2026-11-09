@@ -5,3 +5,8 @@
 - Nextev Srl \<<odoo@nextev.it>\>
 - [Stesi Consulting srl](https://www.stesi.consulting/):
   - Michele Di Croce \<<dicroce.m@stesi.consulting>\>
+- [Agile Business Group](https://www.agilebg.com/):
+  - Alex Comba \<<alex.comba@agilebg.com>\>
+- Lorenzo Battistini \<<https://github.com/eLBati>\>
+- [Phi srl](https://www.phi.technology/):
+  - Marco Colombo \<<marco.colombo@phi.technology>\>

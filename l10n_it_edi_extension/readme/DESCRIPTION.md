@@ -31,8 +31,7 @@ Le funzionalità principali incluse sono:
      - `<RappresentanteFiscale>`
    - Nome e cognome vengono assegnati ai nuovi contatti in base ai nodi `<Nome>` e `<Cognome>` della fattura elettronica.
    - Gestione delle Fatture Elettroniche Multiple:
-     - Supporto per la suddivisione automatica di file XML contenenti più fatture
-     - Ogni `<FatturaElettronicaBody>` viene convertito in una fattura separata mantenendo l'header originale
+     - Se un file XML contiene più fatture (più `<FatturaElettronicaBody>`), Odoo le importa in un'unica registrazione: il modulo lo segnala con un messaggio nel chatter della registrazione
    - Aggiunge la possibilità di scegliere tra 3 modalità di importazione:
      - senza righe
      - una riga per ogni aliquota
@@ -52,6 +51,7 @@ Le funzionalità principali incluse sono:
      - `<DatiSAL>` e `<RiferimentoFase>`: utilizzati per indicare lo stato di avanzamento dei lavori in caso di fatturazione dilazionata/progressiva (contratti di appalto, servizi continuativi o lavori in corso d'opera)
    - Importazione dei dati della fattura principale (`<NumeroFatturaPrincipale>` e `<DataFatturaPrincipale>`)
    - Scrittura nel chatter dei nodi di `<DatiGenerali><DatiTrasporto>` e `<DatiVeicoli>`
+   - Importazione di fatture elettroniche firmate e in base64
    - Gestione avanzata dei Dati delle Righe Fattura:
      - Creazione dei codici articolo in fase di importazione.
        Questi codici servono per identificare univocamente i prodotti/servizi secondo diversi standard di codifica.
@@ -82,6 +82,14 @@ Le funzionalità principali incluse sono:
     - I dati del partner possono essere aggiornati per corrispondere a quelli nella fattura elettronica.
 
 4. Aggiunge di un wizard per calcolare i codici fiscali
+
+5. Invio massivo delle autofatture allo SdI:
+
+   - Nella vista elenco delle fatture fornitore, selezionare le autofatture (ad es. TD17, TD18 e TD19 per il reverse charge) e usare il pulsante "Send self-invoices to SDI".
+   - Vengono inviate solo le autofatture confermate e non ancora inviate, gli altri documenti selezionati vengono ignorati.
+   - Ogni autofattura viene controllata e inviata come con il pulsante "Invia a SDI" del documento: se un'autofattura ha degli errori, il motivo viene mostrato nel documento o nella notifica finale e le altre vengono inviate comunque.
+   - Ogni autofattura viene salvata subito dopo l'invio: se l'operazione si interrompe (ad es. per il limite di tempo del server), le autofatture già inviate risultano inviate anche in Odoo e le restanti si possono inviare ripetendo l'operazione.
+   - Al termine, una notifica riepiloga le autofatture inviate, quelle non inviate e i documenti ignorati.
 
 \<<https://www.fatturapa.gov.it>\>
 
@@ -119,8 +127,7 @@ The main features included are:
      - `<RappresentanteFiscale>`
    - Name and surname are set in the new contacts based on the `<Nome>` and `<Cognome>` nodes of the E-Bill.
    - Multiple Electronic Invoice Management:
-     - Support for automatic splitting of XML files containing multiple invoices
-     - Each `<FatturaElettronicaBody>` is converted into a separate invoice maintaining the original header
+     - If an XML file contains multiple invoices (multiple `<FatturaElettronicaBody>`), Odoo imports them in a single document: the module points it out with a message in the chatter of the document
    - Adds the ability to choose between 3 import modes:
      - without lines
      - one line for each VAT rate
@@ -140,6 +147,7 @@ The main features included are:
      - `<DatiSAL>` and `<RiferimentoFase>`: used to indicate the progress status of work in case of deferred/progressive invoicing (procurement contracts, continuous services, or work in progress)
    - Import of main invoice data (`<NumeroFatturaPrincipale>` and `<DataFatturaPrincipale>`)
    - Writing in chatter of `<DatiGenerali><DatiTrasporto>` and `<DatiVeicoli>` nodes
+   - Import of signed electronic invoices (also base64 encoded)
    - Advanced management of Invoice Line Data:
      - Creation of article codes during import.
        These codes are used to uniquely identify products/services according to different coding standards.
@@ -170,5 +178,13 @@ The main features included are:
     - Partner's data can be updated to match the data in the e-bill
 
 4. Adds a wizard to calculate fiscal codes
+
+5. Bulk sending of self-invoices to the SdI:
+
+   - In the vendor bills list view, select the self-invoices (e.g. TD17, TD18 and TD19 for reverse charge) and use the "Send self-invoices to SDI" button.
+   - Only confirmed self-invoices that have not been sent yet are sent, the other selected documents are skipped.
+   - Each self-invoice is checked and sent as with the "Send to SDI" button of the document: if a self-invoice has errors, the reason is shown in the document or in the final notification and the other self-invoices are sent anyway.
+   - Each self-invoice is saved right after being sent: if the operation is interrupted (e.g. by the server time limit), the self-invoices already sent are shown as sent in Odoo too and the remaining ones can be sent by repeating the operation.
+   - At the end, a notification summarizes the self-invoices sent, the ones not sent and the skipped documents.
 
 \<<https://www.fatturapa.gov.it>\>

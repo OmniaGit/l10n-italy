@@ -14,6 +14,20 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid ""
+"%(count)s selected documents skipped because they are not self-invoices "
+"ready to be sent."
+msgstr ""
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "%(count)s self-invoices sent to the SdI."
+msgstr ""
+
+#. module: l10n_it_edi_extension
 #: model_terms:ir.ui.view,arch_db:l10n_it_edi_extension.view_account_config_settings_create_partner
 msgid ""
 "<span class=\"o_form_label\" title=\"Minimum: the bill is created with no lines; the user will have to create them, according to what specified in the electronic bill. &#10;Tax rate: every tax rate present in the electronic bill will create a line in the bill. &#10;Maximum (default): every line contained in the electronic bill will create a line in the bill.\">\n"
@@ -270,6 +284,12 @@ msgid "Do not update the contact from Electronic Invoice Details"
 msgstr ""
 
 #. module: l10n_it_edi_extension
+#: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_bank_statement_line__l10n_it_document_type_code
+#: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_move__l10n_it_document_type_code
+msgid "Document Type Code"
+msgstr ""
+
+#. module: l10n_it_edi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_bank_statement_line__l10n_it_edi_activity_progress_ids
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_move__l10n_it_edi_activity_progress_ids
 msgid "E-Invoice Activity Progress"
@@ -504,11 +524,6 @@ msgid "Invoice Line"
 msgstr ""
 
 #. module: l10n_it_edi_extension
-#: model:ir.model,name:l10n_it_edi_extension.model_account_journal
-msgid "Journal"
-msgstr ""
-
-#. module: l10n_it_edi_extension
 #: model:ir.model,name:l10n_it_edi_extension.model_account_move
 msgid "Journal Entry"
 msgstr ""
@@ -669,6 +684,26 @@ msgstr ""
 #. module: l10n_it_edi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_l10n_it_edi_summary_data__non_taxable_nature
 msgid "Non taxable nature"
+msgstr ""
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid ""
+"None of the selected documents is a self-invoice ready to be sent to the "
+"SdI."
+msgstr ""
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "Not sent because of an error: %(errors)s."
+msgstr ""
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "Not sent, see the warning in each document: %(moves)s."
 msgstr ""
 
 #. module: l10n_it_edi_extension
@@ -931,6 +966,17 @@ msgid "Sale Provision Type"
 msgstr ""
 
 #. module: l10n_it_edi_extension
+#: model_terms:ir.ui.view,arch_db:l10n_it_edi_extension.account_invoice_list_l10n_it_inherit_view
+msgid "Send self-invoices to SDI"
+msgstr ""
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid "Send to SDI"
+msgstr ""
+
+#. module: l10n_it_edi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_bank_statement_line__l10n_it_edi_sender
 #: model:ir.model.fields,field_description:l10n_it_edi_extension.field_account_move__l10n_it_edi_sender
 msgid "Sender"
@@ -1018,6 +1064,14 @@ msgid "Text Reference"
 msgstr ""
 
 #. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/models/account_move.py:0
+msgid ""
+"The e-invoice file contains %(count)s invoices (%(numbers)s): they have been"
+" merged into this single document."
+msgstr ""
+
+#. module: l10n_it_edi_extension
 #: model:ir.model.fields,help:l10n_it_edi_extension.field_res_company__l10n_edi_it_stable_organization
 msgid ""
 "The fields must be entered only when the seller/provider is non-resident, "
@@ -1095,6 +1149,12 @@ msgstr ""
 msgid ""
 "Untaxed amount (%(amount_untaxed)s}) minus rounding (%(rounding)s}) does not"
 " match with e-invoice untaxed amount %(edi_amount_untaxed)s)"
+msgstr ""
+
+#. module: l10n_it_edi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_extension/tests/test_send_self_invoices.py:0
+msgid "Upload failed"
 msgstr ""
 
 #. module: l10n_it_edi_extension

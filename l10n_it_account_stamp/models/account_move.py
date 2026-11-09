@@ -3,6 +3,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Command
 
 
 class AccountMove(models.Model):
@@ -55,8 +56,13 @@ class AccountMove(models.Model):
             raise UserError(_("Missing stamp duty product in company settings!"))
         total_tax_base = sum(
             (
-                inv_tax.price_subtotal
-                for inv_tax in self.line_ids.filtered(
+                self.currency_id._convert(
+                    inv_tax.price_subtotal,
+                    self.env.ref("base.EUR"),
+                    self.company_id,
+                    inv_tax.date,
+                )
+                for inv_tax in self.invoice_line_ids.filtered(
                     lambda line: set(line.tax_ids.ids)
                     & set(
                         stamp_product_id.l10n_it_account_stamp_stamp_duty_apply_tax_ids.ids
@@ -112,13 +118,17 @@ class AccountMove(models.Model):
                     _("Missing account income configuration for %s")
                     % stamp_product_id.name
                 )
+            currency_id = stamp_product_id.currency_id or inv.company_currency_id
+            price_unit = currency_id._convert(
+                stamp_product_id.list_price, inv.currency_id, inv.company_id, inv.date
+            )
             invoice_line_vals = {
                 "move_id": inv.id,
                 "product_id": stamp_product_id.id,
                 "name": stamp_product_id.description_sale,
                 "sequence": 99999,
                 "account_id": stamp_account.id,
-                "price_unit": stamp_product_id.list_price,
+                "price_unit": price_unit,
                 "quantity": 1,
                 "display_type": "product",
                 "product_uom_id": stamp_product_id.uom_id.id,
@@ -207,7 +217,6 @@ class AccountMove(models.Model):
                 if inv.state == "posted":
                     posted = True
                     inv.state = "draft"
-                line_model = self.env["account.move.line"]
                 stamp_product_id = inv.company_id.with_context(
                     lang=inv.partner_id.lang
                 ).l10n_it_account_stamp_stamp_duty_product_id
@@ -218,10 +227,12 @@ class AccountMove(models.Model):
                 income_vals, expense_vals = inv._build_stamp_duty_lines(
                     stamp_product_id
                 )
-                income_vals["move_id"] = inv.id
-                expense_vals["move_id"] = inv.id
-                line_model.with_context(check_move_validity=False).create(income_vals)
-                line_model.with_context(check_move_validity=False).create(expense_vals)
+
+                inv.line_ids = [
+                    Command.create(income_vals),
+                    Command.create(expense_vals),
+                ]
+
                 if posted:
                     inv.state = "posted"
         return res

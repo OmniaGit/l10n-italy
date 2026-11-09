@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-09-28 10:26+0000\n"
-"PO-Revision-Date: 2026-02-20 19:10+0000\n"
-"Last-Translator: Francesco Foresti <francesco.foresti@ooops404.com>\n"
+"PO-Revision-Date: 2026-10-30 12:52+0000\n"
+"Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: \n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
@@ -201,7 +201,6 @@ msgstr "Spese bancarie"
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_configuration__bank_expense_account_id
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_credit__bank_expense_account_id
-#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__bank_expense_account_id
 msgid "Bank Fees Account"
 msgstr "Conto spese bancarie"
 
@@ -434,7 +433,6 @@ msgstr "Conto avere"
 
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_credit__credit_amount
-#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__credit_amount
 msgid "Credit Amount"
 msgstr "Importo accredito"
 
@@ -476,6 +474,7 @@ msgstr ""
 "La data di accredito deve essere maggiore o pari alla data di accettazione."
 
 #. module: l10n_it_riba_oca
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__credited
 #: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__riba_slip__state__credited
 #: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__riba_slip_line__state__credited
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.view_detail_riba_filter
@@ -589,6 +588,12 @@ msgid "Every account is mandatory."
 msgstr "I conti sono tutti obbligatori."
 
 #. module: l10n_it_riba_oca
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_partner__riba_exclude_expenses
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_users__riba_exclude_expenses
+msgid "Exclude expenses Ri.Ba."
+msgstr "Escludi spese Ri.Ba."
+
+#. module: l10n_it_riba_oca
 #: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_credit__bank_expense_account_id
 msgid ""
 "Expense account for recording bank collection fees. This account will be "
@@ -616,11 +621,6 @@ msgstr "Esporta file RiBa"
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_configuration__past_due_fee_amount
 msgid "Fee Amount"
 msgstr "Valore tariffa"
-
-#. module: l10n_it_riba_oca
-#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__expense_amount
-msgid "Fees Amount"
-msgstr "Importo spese"
 
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_file_export__riba_txt
@@ -723,6 +723,15 @@ msgstr "Se selezionata, alcuni messaggi hanno un errore di consegna."
 #: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_past_due__date
 msgid "If empty, the due date in the line will be used."
 msgstr "Se vuoto, verrà utilizzata la data di scadenza indicata nella riga."
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_partner__riba_exclude_expenses
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_users__riba_exclude_expenses
+msgid ""
+"If set, collection fees are never added to the invoices of this partner."
+msgstr ""
+"Se impostata, le commissioni di riscossione non vengono mai aggiunte alle "
+"fatture di questo partner."
 
 #. module: l10n_it_riba_oca
 #. odoo-python
@@ -925,6 +934,11 @@ msgid "Messages"
 msgstr "Messaggi"
 
 #. module: l10n_it_riba_oca
+#: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__res_partner__riba_policy_expenses__one_a_month
+msgid "More invoices, one expense per Month"
+msgstr "Più fatture, una spesa per mese"
+
+#. module: l10n_it_riba_oca
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.view_riba_slip_line_form
 msgid "Move Line"
 msgstr "Riga movimento"
@@ -1014,6 +1028,26 @@ msgstr "Numero di messaggi che richiedono un'azione"
 #: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_slip_line__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Numero di messaggi con errore di consegna"
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields.selection,name:l10n_it_riba_oca.selection__res_partner__riba_policy_expenses__unlimited
+msgid "One expense per maturity"
+msgstr "Una spesa per scadenza"
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_partner__riba_policy_expenses
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_res_users__riba_policy_expenses
+msgid ""
+"One expense per month: collection fees are not added for the due dates "
+"falling in a month where the partner already has upcoming RiBa due dates on "
+"invoices with collection fees.\n"
+"One expense per maturity: collection fees are added for every due date."
+msgstr ""
+"Una spesa al mese: le commissioni di incasso non vengono applicate alle "
+"scadenze che cadono in un mese in cui il partner ha già altre scadenze RiBa "
+"(relative a fatture che prevedono commissioni di incasso).\n"
+"Una spesa per singola scadenza: le commissioni di incasso vengono applicate "
+"a ogni scadenza."
 
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_account_bank_statement_line__open_amount
@@ -1130,6 +1164,14 @@ msgid "Past Dues"
 msgstr "Insoluti"
 
 #. module: l10n_it_riba_oca
+#. odoo-python
+#: code:addons/l10n_it_riba_oca/wizard/wizard_past_due.py:0
+msgid "Past due fees need the A/C bank account and the protest fee account."
+msgstr ""
+"Per le commissioni scadute sono necessari il conto bancario di riferimento e "
+"il conto relativo alle commissioni per contestazione."
+
+#. module: l10n_it_riba_oca
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.riba_payment_multiple_view_form
 msgid "Pay"
 msgstr "Paga"
@@ -1206,6 +1248,7 @@ msgstr "Prodotto usato come servizio per le spese di incasso RiBa"
 
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_configuration__protest_charge_account_id
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_past_due__bank_expense_account_id
 msgid "Protest Fee Account"
 msgstr "Conto spese di protesto"
 
@@ -1228,6 +1271,12 @@ msgstr "Data registrazione"
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.view_riba_slip_form
 msgid "Reset to Draft"
 msgstr "Reimposta a bozza"
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_partner__riba_policy_expenses
+#: model:ir.model.fields,field_description:l10n_it_riba_oca.field_res_users__riba_policy_expenses
+msgid "Ri.Ba. Policy expenses"
+msgstr "Impostazioni spese RiBa"
 
 #. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_account_move_line__riba
@@ -1463,6 +1512,17 @@ msgstr ""
 "solo documenti in stato «Bozza» o «Annullata»."
 
 #. module: l10n_it_riba_oca
+#. odoo-python
+#: code:addons/l10n_it_riba_oca/wizard/wizard_past_due.py:0
+msgid ""
+"Slip %(slip)s has been credited by the bank: the past due of line %(line)s "
+"has to be recorded with its journal entry."
+msgstr ""
+"La distinta %(slip)s è stata accreditata dalla banca: l'importo scaduto "
+"relativo alla riga %(line)s deve essere registrato tramite la relativa "
+"registrazione contabile."
+
+#. module: l10n_it_riba_oca
 #: model:ir.model.fields,field_description:l10n_it_riba_oca.field_riba_slip_move_line__riba_line_id
 msgid "Slip Line"
 msgstr "Riga distinta"
@@ -1509,6 +1569,15 @@ msgid ""
 msgstr ""
 "I conti bancari con codice {acc_codes}s non possono essere eliminati perché "
 "utilizzati nelle RiBa. Se possibile, archiviare il conto bancario"
+
+#. module: l10n_it_riba_oca
+#: model:ir.model.fields,help:l10n_it_riba_oca.field_riba_past_due__credited
+msgid ""
+"The slip has been credited by the bank: the past due has to be recorded with "
+"its journal entry."
+msgstr ""
+"Il versamento è stato accreditato dalla banca: l'importo scaduto deve essere "
+"registrato tramite la relativa registrazione contabile."
 
 #. module: l10n_it_riba_oca
 #: model_terms:ir.ui.view,arch_db:l10n_it_riba_oca.riba_issue_view
@@ -1606,6 +1675,9 @@ msgstr "del"
 #: code:addons/l10n_it_riba_oca/models/account.py:0
 msgid "{line_name} for {month}-{year}"
 msgstr "{line_name} per {month}-{year}"
+
+#~ msgid "Fees Amount"
+#~ msgstr "Importo spese"
 
 #~ msgid ""
 #~ "<span class=\"o_form_label\">RiBa Collection Fees</span>\n"

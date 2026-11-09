@@ -67,29 +67,23 @@ class EInvoiceImportFileWizard(models.TransientModel):
                             attachment.unlink()
                             continue
 
+                        move = self.env["account.move"].with_company(company).create({})
+                        attachment.write(
+                            {
+                                "res_model": "account.move",
+                                "res_id": move.id,
+                                "res_field": "l10n_it_edi_attachment_file",
+                            }
+                        )
+                        move.with_context(
+                            account_predictive_bills_disable_prediction=True,
+                            no_new_invoice=True,
+                        ).message_post(attachment_ids=attachment.ids)
                         for file_data in attachment._decode_edi_l10n_it_edi(
                             filename, content
                         ):
-                            move = (
-                                self.env["account.move"]
-                                .with_company(company)
-                                .create({})
-                            )
-                            attachment.write(
-                                {
-                                    "res_model": "account.move",
-                                    "res_id": move.id,
-                                    "res_field": "l10n_it_edi_attachment_file",
-                                }
-                            )
-
-                            move.with_context(
-                                account_predictive_bills_disable_prediction=True,
-                                no_new_invoice=True,
-                            ).message_post(attachment_ids=attachment.ids)
-
                             move._l10n_it_edi_import_invoice(move, file_data, True)
-                            moves |= move
+                        moves |= move
         action = {
             "name": self.env._("E-invoices"),
             "type": "ir.actions.act_window",

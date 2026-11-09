@@ -105,6 +105,11 @@ msgid "Declaration of Intent Bills Tax"
 msgstr ""
 
 #. module: l10n_it_edi_doi_extension
+#: model:ir.model.fields,field_description:l10n_it_edi_doi_extension.field_res_company__l10n_it_edi_doi_tax_id
+msgid "Declaration of Intent Tax"
+msgstr ""
+
+#. module: l10n_it_edi_doi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_doi_extension.field_purchase_order__l10n_it_edi_doi_warning
 msgid "Declaration of Intent Threshold Warning"
 msgstr ""
@@ -154,6 +159,14 @@ msgstr ""
 #. module: l10n_it_edi_doi_extension
 #: model:ir.model.fields,help:l10n_it_edi_doi_extension.field_account_move_doi__declaration_start_date
 msgid "First date on which the Declaration of Intent is valid"
+msgstr ""
+
+#. module: l10n_it_edi_doi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_doi_extension/models/account_move.py:0
+msgid ""
+"Given the Declaration of Intent %(doi_name)s is linked to this Move, at "
+"least one line should contain the Tax %(doi_tax_name)s."
 msgstr ""
 
 #. module: l10n_it_edi_doi_extension
@@ -212,6 +225,11 @@ msgid "Journal Entry"
 msgstr ""
 
 #. module: l10n_it_edi_doi_extension
+#: model:ir.model,name:l10n_it_edi_doi_extension.model_account_move_line
+msgid "Journal Item"
+msgstr ""
+
+#. module: l10n_it_edi_doi_extension
 #: model:ir.model.fields,field_description:l10n_it_edi_doi_extension.field_account_move_doi__write_uid
 msgid "Last Updated by"
 msgstr ""
@@ -250,6 +268,11 @@ msgstr ""
 #: code:addons/l10n_it_edi_doi_extension/models/account_move.py:0
 #: code:addons/l10n_it_edi_doi_extension/models/purchase_order.py:0
 msgid "No Declaration of Intent found for %s."
+msgstr ""
+
+#. module: l10n_it_edi_doi_extension
+#: model:ir.model.fields,field_description:l10n_it_edi_doi_extension.field_l10n_it_edi_doi_declaration_of_intent__number
+msgid "Number"
 msgstr ""
 
 #. module: l10n_it_edi_doi_extension
@@ -294,6 +317,11 @@ msgid "Sequence"
 msgstr ""
 
 #. module: l10n_it_edi_doi_extension
+#: model:ir.model.fields,help:l10n_it_edi_doi_extension.field_l10n_it_edi_doi_declaration_of_intent__number
+msgid "Sequential number for internal reference"
+msgstr ""
+
+#. module: l10n_it_edi_doi_extension
 #: model_terms:ir.ui.view,arch_db:l10n_it_edi_doi_extension.declaration_of_intent_search
 msgid "Show issued declarations"
 msgstr ""
@@ -301,6 +329,14 @@ msgstr ""
 #. module: l10n_it_edi_doi_extension
 #: model_terms:ir.ui.view,arch_db:l10n_it_edi_doi_extension.declaration_of_intent_search
 msgid "Show received declarations"
+msgstr ""
+
+#. module: l10n_it_edi_doi_extension
+#. odoo-python
+#: code:addons/l10n_it_edi_doi_extension/models/account_move_line.py:0
+msgid ""
+"Since the invoice line %(line_name)s includes the Tax %(doi_tax)s for the "
+"Declaration of Intent, it cannot include other Taxes."
 msgstr ""
 
 #. module: l10n_it_edi_doi_extension
