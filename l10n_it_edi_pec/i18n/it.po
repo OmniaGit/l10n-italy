@@ -242,3 +242,47 @@ msgid "SDI sending reset (transaction %(transaction)s): %(files)s kept here as h
 msgstr ""
 "Invio SdI azzerato (transazione %(transaction)s): %(files)s conservati qui "
 "come storico."
+
+#. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/res_company.py:0
+msgid "Check Company Data"
+msgstr "Controlla i dati dell'azienda"
+
+#. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/res_company.py:0
+msgid ""
+"Please set the Codice Fiscale of the company: the e-invoice file name sent "
+"to SDI is built from it."
+msgstr ""
+"Impostare il codice fiscale dell'azienda: il nome del file di fattura "
+"elettronica inviato allo SdI viene costruito a partire da esso."
+
+#. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/mail_thread.py:0
+msgid ""
+"SDI PEC message \"%(subject)s\" has been read but not processed: none of its"
+" attachments (%(attachments)s) is a recognized e-invoice or SDI "
+"notification."
+msgstr ""
+"Il messaggio PEC SdI \"%(subject)s\" è stato letto ma non elaborato: nessuno "
+"dei suoi allegati (%(attachments)s) è una fattura elettronica o una notifica "
+"SdI riconosciuta."
+
+#. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/account_move.py:0
+msgid ""
+"The e-invoice file name %(filename)s does not follow the SDI naming rules: "
+"check the Codice Fiscale of company %(company)s."
+msgstr ""
+"Il nome del file di fattura elettronica %(filename)s non rispetta le regole "
+"di nomenclatura SdI: controllare il codice fiscale dell'azienda %(company)s."
+
+#. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/res_company.py:0
+msgid "View Company/ies"
+msgstr "Visualizza aziende"

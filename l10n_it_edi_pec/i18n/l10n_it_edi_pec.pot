@@ -21,6 +21,12 @@ msgid ""
 msgstr ""
 
 #. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/res_company.py:0
+msgid "Check Company Data"
+msgstr ""
+
+#. module: l10n_it_edi_pec
 #: model:ir.model,name:l10n_it_edi_pec.model_res_company
 msgid "Companies"
 msgstr ""
@@ -175,6 +181,14 @@ msgid "Please configure the SDI PEC email address."
 msgstr ""
 
 #. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/res_company.py:0
+msgid ""
+"Please set the Codice Fiscale of the company: the e-invoice file name sent "
+"to SDI is built from it."
+msgstr ""
+
+#. module: l10n_it_edi_pec
 #: model_terms:ir.ui.view,arch_db:l10n_it_edi_pec.account_move_form_l10n_it_edi_pec
 msgid "Reset SDI sending"
 msgstr ""
@@ -183,6 +197,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_it_edi_pec.field_res_company__l10n_it_edi_pec_email_exchange_system
 #: model:ir.model.fields,field_description:l10n_it_edi_pec.field_res_config_settings__l10n_it_edi_pec_email_exchange_system
 msgid "SDI PEC Email Address"
+msgstr ""
+
+#. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/mail_thread.py:0
+msgid ""
+"SDI PEC message \"%(subject)s\" has been read but not processed: none of its"
+" attachments (%(attachments)s) is a recognized e-invoice or SDI "
+"notification."
 msgstr ""
 
 #. module: l10n_it_edi_pec
@@ -210,6 +233,14 @@ msgstr ""
 
 #. module: l10n_it_edi_pec
 #. odoo-python
+#: code:addons/l10n_it_edi_pec/models/account_move.py:0
+msgid ""
+"The e-invoice file name %(filename)s does not follow the SDI naming rules: "
+"check the Codice Fiscale of company %(company)s."
+msgstr ""
+
+#. module: l10n_it_edi_pec
+#. odoo-python
 #: code:addons/l10n_it_edi_pec/models/res_company.py:0
 msgid "The incoming PEC server must be confirmed."
 msgstr ""
@@ -218,4 +249,10 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_it_edi_pec.field_res_company__l10n_it_edi_use_pec
 #: model:ir.model.fields,field_description:l10n_it_edi_pec.field_res_config_settings__l10n_it_edi_use_pec
 msgid "Use PEC for e-invoicing"
+msgstr ""
+
+#. module: l10n_it_edi_pec
+#. odoo-python
+#: code:addons/l10n_it_edi_pec/models/res_company.py:0
+msgid "View Company/ies"
 msgstr ""
